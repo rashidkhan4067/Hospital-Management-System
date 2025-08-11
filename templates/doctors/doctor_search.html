@@ -1,0 +1,242 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Search Doctors - Premium HMS{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'doctors:doctor_list' %}">Doctors</a></li>
+<li class="breadcrumb-item active">Search</li>
+{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'doctors:doctor_list' %}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i> Back to Doctors
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="premium-card">
+            <div class="card-header">
+                <div class="d-flex align-items-center">
+                    <div class="icon-wrapper me-3">
+                        <i class="bi bi-search text-primary"></i>
+                    </div>
+                    <div>
+                        <h4 class="card-title mb-0">Search Doctors</h4>
+                        <p class="card-subtitle text-muted mb-0">Find doctors by name, specialization, or department</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Search Form -->
+                <form method="get" class="mb-4">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="input-group">
+                                <input type="text" 
+                                       name="q" 
+                                       class="form-control form-control-lg" 
+                                       placeholder="Search by name, specialization, or department..." 
+                                       value="{{ request.GET.q }}"
+                                       autocomplete="off">
+                                <button class="btn btn-primary" type="submit">
+                                    <i class="bi bi-search"></i> Search
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <select name="department" class="form-select form-select-lg">
+                                <option value="">All Departments</option>
+                                {% for dept in departments %}
+                                <option value="{{ dept.id }}" {% if request.GET.department == dept.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ dept.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <small class="form-text text-muted mt-2">
+                        Search by doctor name, specialization, or filter by department
+                    </small>
+                </form>
+
+                <!-- Search Results -->
+                {% if request.GET.q or request.GET.department %}
+                    <div class="search-results">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">Search Results</h5>
+                            <span class="badge bg-primary">{{ doctors|length }} doctor{{ doctors|length|pluralize }}</span>
+                        </div>
+
+                        {% if doctors %}
+                            <div class="row">
+                                {% for doctor in doctors %}
+                                <div class="col-md-6 col-lg-4 mb-4">
+                                    <div class="doctor-card h-100">
+                                        <div class="card-body">
+                                            <div class="d-flex align-items-center mb-3">
+                                                <div class="avatar-wrapper me-3">
+                                                    <div class="avatar bg-primary text-white">
+                                                        {{ doctor.user.first_name.0 }}{{ doctor.user.last_name.0 }}
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-1">Dr. {{ doctor.user.get_full_name }}</h6>
+                                                    <p class="text-muted mb-0 small">{{ doctor.specialization }}</p>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="doctor-info">
+                                                <p class="mb-2">
+                                                    <i class="bi bi-building text-muted me-2"></i>
+                                                    {{ doctor.department.name }}
+                                                </p>
+                                                <p class="mb-2">
+                                                    <i class="bi bi-award text-muted me-2"></i>
+                                                    {{ doctor.experience_years }} years experience
+                                                </p>
+                                                <p class="mb-2">
+                                                    <i class="bi bi-currency-dollar text-muted me-2"></i>
+                                                    ${{ doctor.consultation_fee }}
+                                                </p>
+                                                {% if doctor.is_available %}
+                                                    <span class="badge bg-success">Available</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">Unavailable</span>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            <div class="mt-3">
+                                                <a href="{% url 'doctors:doctor_detail' doctor.pk %}" class="btn btn-outline-primary btn-sm">
+                                                    <i class="bi bi-eye"></i> View Profile
+                                                </a>
+                                                {% if user.role == 'ADMIN' %}
+                                                <a href="{% url 'doctors:doctor_edit' doctor.pk %}" class="btn btn-outline-secondary btn-sm">
+                                                    <i class="bi bi-pencil"></i> Edit
+                                                </a>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            
+                            <!-- Pagination -->
+                            {% if is_paginated %}
+                            <nav aria-label="Doctor search pagination" class="mt-4">
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?q={{ request.GET.q }}&department={{ request.GET.department }}&page=1">First</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?q={{ request.GET.q }}&department={{ request.GET.department }}&page={{ page_obj.previous_page_number }}">Previous</a>
+                                        </li>
+                                    {% endif %}
+                                    
+                                    <li class="page-item active">
+                                        <span class="page-link">
+                                            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                                        </span>
+                                    </li>
+                                    
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?q={{ request.GET.q }}&department={{ request.GET.department }}&page={{ page_obj.next_page_number }}">Next</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?q={{ request.GET.q }}&department={{ request.GET.department }}&page={{ page_obj.paginator.num_pages }}">Last</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                            {% endif %}
+                        {% else %}
+                            <div class="empty-state text-center py-5">
+                                <i class="bi bi-search display-1 text-muted mb-3"></i>
+                                <h5 class="text-muted">No Doctors Found</h5>
+                                <p class="text-muted mb-4">
+                                    No doctors match your search criteria.
+                                    <br>Try searching with different keywords or select a different department.
+                                </p>
+                                <a href="{% url 'doctors:doctor_create' %}" class="btn btn-primary">
+                                    <i class="bi bi-plus-circle"></i> Add New Doctor
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="search-placeholder text-center py-5">
+                        <i class="bi bi-search display-1 text-muted mb-3"></i>
+                        <h5 class="text-muted">Search for Doctors</h5>
+                        <p class="text-muted mb-4">
+                            Enter a search term above to find doctors in the system.
+                            <br>You can search by name, specialization, or filter by department.
+                        </p>
+                        <div class="search-tips">
+                            <h6 class="text-muted mb-2">Search Tips:</h6>
+                            <ul class="list-unstyled text-muted small">
+                                <li><i class="bi bi-check-circle text-success me-1"></i> Search by doctor name (e.g., "Dr. Smith")</li>
+                                <li><i class="bi bi-check-circle text-success me-1"></i> Search by specialization (e.g., "Cardiology")</li>
+                                <li><i class="bi bi-check-circle text-success me-1"></i> Filter by department using the dropdown</li>
+                                <li><i class="bi bi-check-circle text-success me-1"></i> Combine search terms for better results</li>
+                            </ul>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.avatar-wrapper .avatar {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.doctor-card {
+    border: 1px solid #e9ecef;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.doctor-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.search-tips {
+    background: #f8f9fa;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-top: 1rem;
+    text-align: left;
+    display: inline-block;
+}
+
+.input-group .form-control:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-focus search input
+    const searchInput = document.querySelector('input[name="q"]');
+    if (searchInput && !searchInput.value) {
+        searchInput.focus();
+    }
+});
+</script>
+{% endblock %}

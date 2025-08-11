@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if object %}Edit Patient{% else %}Add New Patient{% endif %} - Premium HMS{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'patients:patient_list' %}">Patients</a></li>
+<li class="breadcrumb-item active">{% if object %}Edit Patient{% else %}Add New Patient{% endif %}</li>
+{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'patients:patient_list' %}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i> Back to Patients
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="premium-card">
+            <div class="card-header">
+                <div class="d-flex align-items-center">
+                    <div class="icon-wrapper me-3">
+                        <i class="bi bi-person-plus text-primary"></i>
+                    </div>
+                    <div>
+                        <h4 class="card-title mb-0">
+                            {% if object %}Edit Patient Profile{% else %}Add New Patient{% endif %}
+                        </h4>
+                        <p class="card-subtitle text-muted mb-0">
+                            {% if object %}Update patient information{% else %}Create a new patient profile{% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <form method="post" class="premium-form">
+                    {% csrf_token %}
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.blood_group.id_for_label }}" class="form-label">Blood Group</label>
+                                {{ form.blood_group }}
+                                {% if form.blood_group.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.blood_group.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.emergency_contact_name.id_for_label }}" class="form-label">Emergency Contact Name</label>
+                                {{ form.emergency_contact_name }}
+                                {% if form.emergency_contact_name.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.emergency_contact_name.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.emergency_contact_phone.id_for_label }}" class="form-label">Emergency Contact Phone</label>
+                        {{ form.emergency_contact_phone }}
+                        {% if form.emergency_contact_phone.errors %}
+                            <div class="invalid-feedback d-block">{{ form.emergency_contact_phone.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.medical_history.id_for_label }}" class="form-label">Medical History</label>
+                        {{ form.medical_history }}
+                        {% if form.medical_history.errors %}
+                            <div class="invalid-feedback d-block">{{ form.medical_history.errors.0 }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">Previous illnesses, surgeries, allergies</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.current_medications.id_for_label }}" class="form-label">Current Medications</label>
+                        {{ form.current_medications }}
+                        {% if form.current_medications.errors %}
+                            <div class="invalid-feedback d-block">{{ form.current_medications.errors.0 }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">Current medications being taken</small>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i>
+                            {% if object %}Update Patient{% else %}Create Patient{% endif %}
+                        </button>
+                        <a href="{% url 'patients:patient_list' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

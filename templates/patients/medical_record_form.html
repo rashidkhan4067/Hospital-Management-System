@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Add Medical Record - {{ patient.full_name }} - Premium HMS{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'patients:patient_list' %}">Patients</a></li>
+<li class="breadcrumb-item"><a href="{% url 'patients:patient_detail' patient.pk %}">{{ patient.full_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'patients:patient_records' patient.pk %}">Medical Records</a></li>
+<li class="breadcrumb-item active">Add Record</li>
+{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'patients:patient_records' patient.pk %}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i> Back to Records
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <!-- Patient Info Card -->
+        <div class="premium-card mb-4">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="avatar-wrapper me-3">
+                        <div class="avatar bg-primary text-white">
+                            {{ patient.user.first_name.0 }}{{ patient.user.last_name.0 }}
+                        </div>
+                    </div>
+                    <div>
+                        <h5 class="mb-1">{{ patient.full_name }}</h5>
+                        <p class="text-muted mb-0">
+                            Patient ID: {{ patient.patient_id }}
+                            {% if patient.age %} | Age: {{ patient.age }} years{% endif %}
+                            {% if patient.blood_group %} | Blood Group: {{ patient.blood_group }}{% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Medical Record Form -->
+        <div class="premium-card">
+            <div class="card-header">
+                <div class="d-flex align-items-center">
+                    <div class="icon-wrapper me-3">
+                        <i class="bi bi-file-medical-fill text-primary"></i>
+                    </div>
+                    <div>
+                        <h4 class="card-title mb-0">Add Medical Record</h4>
+                        <p class="card-subtitle text-muted mb-0">Create a new medical record for this patient</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <form method="post" class="premium-form">
+                    {% csrf_token %}
+                    
+                    <div class="form-section">
+                        <h5 class="section-title">
+                            <i class="bi bi-clipboard-data"></i> Diagnosis & Treatment
+                        </h5>
+                        
+                        <div class="form-group">
+                            <label for="{{ form.diagnosis.id_for_label }}" class="form-label">
+                                Diagnosis <span class="text-danger">*</span>
+                            </label>
+                            {{ form.diagnosis }}
+                            {% if form.diagnosis.errors %}
+                                <div class="invalid-feedback d-block">{{ form.diagnosis.errors.0 }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">Primary diagnosis and any secondary conditions</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="{{ form.treatment.id_for_label }}" class="form-label">
+                                Treatment <span class="text-danger">*</span>
+                            </label>
+                            {{ form.treatment }}
+                            {% if form.treatment.errors %}
+                                <div class="invalid-feedback d-block">{{ form.treatment.errors.0 }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">Treatment plan and procedures performed</small>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h5 class="section-title">
+                            <i class="bi bi-capsule"></i> Prescription & Medication
+                        </h5>
+                        
+                        <div class="form-group">
+                            <label for="{{ form.prescription.id_for_label }}" class="form-label">Prescription</label>
+                            {{ form.prescription }}
+                            {% if form.prescription.errors %}
+                                <div class="invalid-feedback d-block">{{ form.prescription.errors.0 }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">Medications prescribed with dosage and instructions</small>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h5 class="section-title">
+                            <i class="bi bi-journal-text"></i> Additional Information
+                        </h5>
+                        
+                        <div class="form-group">
+                            <label for="{{ form.notes.id_for_label }}" class="form-label">Clinical Notes</label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}
+                                <div class="invalid-feedback d-block">{{ form.notes.errors.0 }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">Additional observations, patient response, and other relevant notes</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="{{ form.next_appointment.id_for_label }}" class="form-label">Next Appointment Date</label>
+                            {{ form.next_appointment }}
+                            {% if form.next_appointment.errors %}
+                                <div class="invalid-feedback d-block">{{ form.next_appointment.errors.0 }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">Schedule follow-up appointment if needed</small>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Save Medical Record
+                        </button>
+                        <a href="{% url 'patients:patient_records' patient.pk %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-section {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.form-section:last-of-type {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.section-title {
+    color: #495057;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.section-title i {
+    margin-right: 0.5rem;
+    color: #007bff;
+}
+
+.avatar-wrapper .avatar {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 1.25rem;
+}
+
+.form-label .text-danger {
+    font-size: 0.875rem;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Export Data - Premium HMS{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'hospital_analytics:dashboard' %}">Analytics</a></li>
+<li class="breadcrumb-item active">Export Data</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card premium-card">
+                <div class="card-header">
+                    <h4 class="card-title">
+                        <i class="bi bi-download me-2"></i>Export Data
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <p>Data export functionality coming soon...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

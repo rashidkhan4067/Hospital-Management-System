@@ -1,0 +1,355 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Appointment Details - Premium HMS{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'appointments:appointment_list' %}">Appointments</a></li>
+<li class="breadcrumb-item active">Appointment #{{ appointment.id }}</li>
+{% endblock %}
+
+{% block page_actions %}
+<div class="d-flex gap-2">
+    {% if appointment.status == 'PENDING' %}
+        <a href="{% url 'appointments:appointment_confirm' appointment.pk %}" class="btn btn-success">
+            <i class="bi bi-check-circle"></i> Confirm
+        </a>
+    {% endif %}
+    {% if appointment.status != 'CANCELLED' and appointment.status != 'COMPLETED' %}
+        <a href="{% url 'appointments:appointment_edit' appointment.pk %}" class="btn btn-warning">
+            <i class="bi bi-pencil"></i> Edit
+        </a>
+        <a href="{% url 'appointments:appointment_cancel' appointment.pk %}" class="btn btn-danger"
+           onclick="return confirm('Are you sure you want to cancel this appointment?')">
+            <i class="bi bi-x-circle"></i> Cancel
+        </a>
+    {% endif %}
+    <a href="{% url 'appointments:appointment_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Back to List
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Main Appointment Details -->
+        <div class="col-lg-8">
+            <div class="card premium-card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-calendar-event"></i> Appointment Details
+                        </h5>
+                        <span class="badge 
+                            {% if appointment.status == 'CONFIRMED' %}bg-success
+                            {% elif appointment.status == 'PENDING' %}bg-warning
+                            {% elif appointment.status == 'COMPLETED' %}bg-primary
+                            {% elif appointment.status == 'CANCELLED' %}bg-danger
+                            {% else %}bg-secondary{% endif %} fs-6">
+                            {{ appointment.status|title }}
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="detail-group">
+                                <label class="detail-label">Appointment ID</label>
+                                <p class="detail-value">#{{ appointment.id }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="detail-group">
+                                <label class="detail-label">Appointment Type</label>
+                                <p class="detail-value">{{ appointment.appointment_type|default:"General Consultation" }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="detail-group">
+                                <label class="detail-label">Date</label>
+                                <p class="detail-value">
+                                    <i class="bi bi-calendar3 text-primary"></i>
+                                    {{ appointment.appointment_date|date:"l, F d, Y" }}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="detail-group">
+                                <label class="detail-label">Time</label>
+                                <p class="detail-value">
+                                    <i class="bi bi-clock text-primary"></i>
+                                    {{ appointment.appointment_time|time:"g:i A" }}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="detail-group">
+                                <label class="detail-label">Reason for Visit</label>
+                                <p class="detail-value">{{ appointment.reason|default:"Not specified" }}</p>
+                            </div>
+                        </div>
+                        {% if appointment.notes %}
+                        <div class="col-12">
+                            <div class="detail-group">
+                                <label class="detail-label">Notes</label>
+                                <p class="detail-value">{{ appointment.notes }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Patient Information -->
+            <div class="card premium-card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-person"></i> Patient Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="detail-group">
+                                <label class="detail-label">Full Name</label>
+                                <p class="detail-value">
+                                    <a href="{% url 'patients:patient_detail' appointment.patient.pk %}" class="text-decoration-none">
+                                        {{ appointment.patient.user.get_full_name }}
+                                    </a>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="detail-group">
+                                <label class="detail-label">Email</label>
+                                <p class="detail-value">{{ appointment.patient.user.email }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="detail-group">
+                                <label class="detail-label">Phone</label>
+                                <p class="detail-value">{{ appointment.patient.user.phone|default:"Not provided" }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="detail-group">
+                                <label class="detail-label">Date of Birth</label>
+                                <p class="detail-value">{{ appointment.patient.date_of_birth|default:"Not provided" }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="detail-group">
+                                <label class="detail-label">Gender</label>
+                                <p class="detail-value">{{ appointment.patient.gender|default:"Not specified" }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="detail-group">
+                                <label class="detail-label">Blood Group</label>
+                                <p class="detail-value">{{ appointment.patient.blood_group|default:"Not specified" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Doctor Information -->
+            <div class="card premium-card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-person-badge"></i> Doctor Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="detail-group">
+                                <label class="detail-label">Doctor Name</label>
+                                <p class="detail-value">
+                                    <a href="{% url 'doctors:doctor_detail' appointment.doctor.pk %}" class="text-decoration-none">
+                                        Dr. {{ appointment.doctor.user.get_full_name }}
+                                    </a>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="detail-group">
+                                <label class="detail-label">Specialization</label>
+                                <p class="detail-value">{{ appointment.doctor.specialization }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="detail-group">
+                                <label class="detail-label">Email</label>
+                                <p class="detail-value">{{ appointment.doctor.user.email }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="detail-group">
+                                <label class="detail-label">Phone</label>
+                                <p class="detail-value">{{ appointment.doctor.user.phone|default:"Not provided" }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="detail-group">
+                                <label class="detail-label">Consultation Fee</label>
+                                <p class="detail-value">${{ appointment.doctor.consultation_fee|default:"0" }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="detail-group">
+                                <label class="detail-label">Experience</label>
+                                <p class="detail-value">{{ appointment.doctor.experience_years|default:"0" }} years</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Quick Actions -->
+            <div class="card premium-card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        {% if appointment.status == 'PENDING' %}
+                            <a href="{% url 'appointments:appointment_confirm' appointment.pk %}" class="btn btn-success">
+                                <i class="bi bi-check-circle"></i> Confirm Appointment
+                            </a>
+                        {% endif %}
+                        {% if appointment.status != 'CANCELLED' and appointment.status != 'COMPLETED' %}
+                            <a href="{% url 'appointments:appointment_edit' appointment.pk %}" class="btn btn-warning">
+                                <i class="bi bi-pencil"></i> Edit Appointment
+                            </a>
+                        {% endif %}
+                        <a href="{% url 'appointments:appointment_create' %}" class="btn btn-primary">
+                            <i class="bi bi-calendar-plus"></i> Schedule New
+                        </a>
+                        <a href="{% url 'patients:patient_detail' appointment.patient.pk %}" class="btn btn-outline-primary">
+                            <i class="bi bi-person"></i> View Patient
+                        </a>
+                        <a href="{% url 'doctors:doctor_detail' appointment.doctor.pk %}" class="btn btn-outline-primary">
+                            <i class="bi bi-person-badge"></i> View Doctor
+                        </a>
+                        {% if appointment.status != 'CANCELLED' and appointment.status != 'COMPLETED' %}
+                            <a href="{% url 'appointments:appointment_cancel' appointment.pk %}" class="btn btn-outline-danger"
+                               onclick="return confirm('Are you sure you want to cancel this appointment?')">
+                                <i class="bi bi-x-circle"></i> Cancel Appointment
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Appointment Timeline -->
+            <div class="card premium-card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Appointment Timeline</h5>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-primary"></div>
+                            <div class="timeline-content">
+                                <h6>Appointment Created</h6>
+                                <p class="text-muted mb-0">{{ appointment.created_at|date:"M d, Y g:i A" }}</p>
+                            </div>
+                        </div>
+                        {% if appointment.status == 'CONFIRMED' %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-success"></div>
+                            <div class="timeline-content">
+                                <h6>Appointment Confirmed</h6>
+                                <p class="text-muted mb-0">{{ appointment.updated_at|date:"M d, Y g:i A" }}</p>
+                            </div>
+                        </div>
+                        {% elif appointment.status == 'CANCELLED' %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-danger"></div>
+                            <div class="timeline-content">
+                                <h6>Appointment Cancelled</h6>
+                                <p class="text-muted mb-0">{{ appointment.updated_at|date:"M d, Y g:i A" }}</p>
+                            </div>
+                        </div>
+                        {% elif appointment.status == 'COMPLETED' %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-info"></div>
+                            <div class="timeline-content">
+                                <h6>Appointment Completed</h6>
+                                <p class="text-muted mb-0">{{ appointment.updated_at|date:"M d, Y g:i A" }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.detail-group {
+    margin-bottom: 1.5rem;
+}
+
+.detail-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--gray-700);
+    margin-bottom: 0.25rem;
+    display: block;
+}
+
+.detail-value {
+    font-size: 1rem;
+    color: var(--gray-900);
+    margin: 0;
+}
+
+.timeline {
+    position: relative;
+    padding-left: 2rem;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 0.75rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--gray-200);
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -2rem;
+    top: 0.25rem;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 0 0 2px var(--gray-200);
+}
+
+.timeline-content h6 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.timeline-content p {
+    font-size: 0.8rem;
+}
+</style>
+{% endblock %}

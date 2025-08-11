@@ -1,0 +1,910 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Book Appointment - Premium HMS{% endblock %}
+
+{% block extra_css %}
+<style>
+    .booking-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 24px;
+        padding: 40px;
+        margin-bottom: 32px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .booking-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        opacity: 0.3;
+    }
+    
+    .header-content {
+        position: relative;
+        z-index: 1;
+        text-align: center;
+    }
+    
+    .header-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+        background: linear-gradient(45deg, #ffffff, #e0e7ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .header-subtitle {
+        font-size: 1.1rem;
+        opacity: 0.9;
+    }
+    
+    .booking-wizard {
+        background: linear-gradient(145deg, #ffffff, #f8fafc);
+        border-radius: 24px;
+        padding: 40px;
+        box-shadow: 
+            0 20px 60px rgba(0, 0, 0, 0.1),
+            0 8px 30px rgba(0, 0, 0, 0.05),
+            inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        margin-bottom: 32px;
+    }
+    
+    .wizard-steps {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 40px;
+        position: relative;
+    }
+    
+    .wizard-steps::before {
+        content: '';
+        position: absolute;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60%;
+        height: 2px;
+        background: var(--gray-200);
+        z-index: 1;
+    }
+    
+    .wizard-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        position: relative;
+        z-index: 2;
+        background: white;
+        padding: 0 20px;
+    }
+    
+    .step-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--gray-200);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: var(--gray-500);
+        transition: all 0.3s ease;
+    }
+    
+    .step-circle.active {
+        background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+        color: white;
+        box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+    }
+    
+    .step-circle.completed {
+        background: linear-gradient(135deg, var(--success-500), var(--success-600));
+        color: white;
+    }
+    
+    .step-label {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--gray-600);
+        text-align: center;
+    }
+    
+    .step-label.active {
+        color: var(--primary-600);
+    }
+    
+    .wizard-content {
+        min-height: 400px;
+    }
+    
+    .step-content {
+        display: none;
+    }
+    
+    .step-content.active {
+        display: block;
+        animation: fadeInUp 0.3s ease;
+    }
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .form-section {
+        margin-bottom: 32px;
+    }
+    
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--gray-900);
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .section-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 16px;
+    }
+    
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: var(--gray-700);
+        margin-bottom: 8px;
+        font-size: 14px;
+        display: block;
+    }
+    
+    .form-control {
+        border: 2px solid var(--gray-200);
+        border-radius: 12px;
+        padding: 14px 16px;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        background: white;
+        width: 100%;
+    }
+    
+    .form-control:focus {
+        border-color: var(--primary-500);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        outline: none;
+    }
+    
+    .doctor-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+    }
+    
+    .doctor-card {
+        background: linear-gradient(145deg, #ffffff, #f8fafc);
+        border: 2px solid var(--gray-200);
+        border-radius: 16px;
+        padding: 20px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    
+    .doctor-card:hover {
+        border-color: var(--primary-300);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 32px rgba(59, 130, 246, 0.15);
+    }
+    
+    .doctor-card.selected {
+        border-color: var(--primary-500);
+        background: linear-gradient(145deg, var(--primary-50), var(--primary-25));
+        box-shadow: 0 8px 32px rgba(59, 130, 246, 0.2);
+    }
+    
+    .doctor-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+    
+    .doctor-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 24px;
+        font-weight: 700;
+    }
+    
+    .doctor-info {
+        flex: 1;
+    }
+    
+    .doctor-name {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--gray-900);
+        margin-bottom: 4px;
+    }
+    
+    .doctor-specialty {
+        color: var(--gray-600);
+        font-size: 14px;
+        margin-bottom: 4px;
+    }
+    
+    .doctor-rating {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        color: var(--warning-500);
+        font-size: 14px;
+    }
+    
+    .doctor-details {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        font-size: 13px;
+    }
+    
+    .detail-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--gray-600);
+    }
+    
+    .time-slots {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 12px;
+    }
+    
+    .time-slot {
+        background: white;
+        border: 2px solid var(--gray-200);
+        border-radius: 12px;
+        padding: 12px 16px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 600;
+        font-size: 14px;
+    }
+    
+    .time-slot:hover {
+        border-color: var(--primary-300);
+        background: var(--primary-50);
+    }
+    
+    .time-slot.selected {
+        border-color: var(--primary-500);
+        background: var(--primary-500);
+        color: white;
+    }
+    
+    .time-slot.unavailable {
+        background: var(--gray-100);
+        color: var(--gray-400);
+        cursor: not-allowed;
+        border-color: var(--gray-200);
+    }
+    
+    .wizard-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 40px;
+        padding-top: 24px;
+        border-top: 2px solid var(--gray-100);
+    }
+    
+    .btn-wizard {
+        padding: 12px 24px;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .btn-primary-wizard {
+        background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+        color: white;
+        box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+    }
+    
+    .btn-primary-wizard:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 32px rgba(59, 130, 246, 0.4);
+    }
+    
+    .btn-secondary-wizard {
+        background: var(--gray-100);
+        color: var(--gray-700);
+    }
+    
+    .btn-secondary-wizard:hover {
+        background: var(--gray-200);
+        transform: translateY(-1px);
+    }
+    
+    .appointment-summary {
+        background: linear-gradient(135deg, var(--success-50), var(--success-25));
+        border: 2px solid var(--success-200);
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 24px;
+    }
+    
+    .summary-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--success-800);
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+    }
+    
+    .summary-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    
+    .summary-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--success-600);
+        text-transform: uppercase;
+    }
+    
+    .summary-value {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--success-800);
+    }
+    
+    @media (max-width: 768px) {
+        .wizard-steps {
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .wizard-steps::before {
+            display: none;
+        }
+        
+        .doctor-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .time-slots {
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        }
+        
+        .wizard-actions {
+            flex-direction: column;
+            gap: 12px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">Dashboard</a></li>
+<li class="breadcrumb-item"><a href="{% url 'appointments:appointment_list' %}">Appointments</a></li>
+<li class="breadcrumb-item active">Book Appointment</li>
+{% endblock %}
+
+{% block content %}
+<div class="booking-content">
+    <!-- Header -->
+    <div class="booking-header">
+        <div class="header-content">
+            <h1 class="header-title">Book New Appointment</h1>
+            <p class="header-subtitle">Schedule your visit with our expert medical professionals</p>
+        </div>
+    </div>
+    
+    <!-- Booking Wizard -->
+    <div class="booking-wizard">
+        <!-- Wizard Steps -->
+        <div class="wizard-steps">
+            <div class="wizard-step">
+                <div class="step-circle active" data-step="1">1</div>
+                <div class="step-label active">Patient Info</div>
+            </div>
+            <div class="wizard-step">
+                <div class="step-circle" data-step="2">2</div>
+                <div class="step-label">Select Doctor</div>
+            </div>
+            <div class="wizard-step">
+                <div class="step-circle" data-step="3">3</div>
+                <div class="step-label">Date & Time</div>
+            </div>
+            <div class="wizard-step">
+                <div class="step-circle" data-step="4">4</div>
+                <div class="step-label">Confirmation</div>
+            </div>
+        </div>
+        
+        <!-- Wizard Content -->
+        <form id="appointmentForm" method="post">
+            {% csrf_token %}
+            <div class="wizard-content">
+                <!-- Step 1: Patient Information -->
+                <div class="step-content active" data-step="1">
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <div class="section-icon">
+                                <i class="bi bi-person"></i>
+                            </div>
+                            Patient Information
+                        </h3>
+                        
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Select Patient</label>
+                                <select name="patient" class="form-control" required>
+                                    <option value="">Choose a patient...</option>
+                                    {% for patient in patients %}
+                                    <option value="{{ patient.pk }}" 
+                                            {% if request.GET.patient == patient.pk|stringformat:"s" %}selected{% endif %}>
+                                        {{ patient.full_name }} ({{ patient.patient_id }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Appointment Type</label>
+                                <select name="appointment_type" class="form-control" required>
+                                    <option value="">Select type...</option>
+                                    <option value="CONSULTATION">Consultation</option>
+                                    <option value="FOLLOW_UP">Follow-up</option>
+                                    <option value="EMERGENCY">Emergency</option>
+                                    <option value="ROUTINE_CHECKUP">Routine Checkup</option>
+                                    <option value="SPECIALIST_CONSULTATION">Specialist Consultation</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Symptoms / Reason for Visit</label>
+                            <textarea name="symptoms" class="form-control" rows="4" 
+                                      placeholder="Please describe the symptoms or reason for this appointment..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Step 2: Select Doctor -->
+                <div class="step-content" data-step="2">
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <div class="section-icon">
+                                <i class="bi bi-person-badge"></i>
+                            </div>
+                            Select Doctor
+                        </h3>
+                        
+                        <div class="doctor-grid">
+                            {% for doctor in doctors %}
+                            <div class="doctor-card" data-doctor="{{ doctor.pk }}">
+                                <div class="doctor-header">
+                                    <div class="doctor-avatar">
+                                        {% if doctor.user.profile_picture %}
+                                            <img src="{{ doctor.user.profile_picture.url }}" alt="{{ doctor.user.get_full_name }}">
+                                        {% else %}
+                                            {{ doctor.user.first_name|first }}{{ doctor.user.last_name|first }}
+                                        {% endif %}
+                                    </div>
+                                    <div class="doctor-info">
+                                        <div class="doctor-name">Dr. {{ doctor.user.get_full_name }}</div>
+                                        <div class="doctor-specialty">{{ doctor.specialization }}</div>
+                                        <div class="doctor-rating">
+                                            <i class="bi bi-star-fill"></i>
+                                            <span>4.8 (124 reviews)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="doctor-details">
+                                    <div class="detail-item">
+                                        <i class="bi bi-building"></i>
+                                        <span>{{ doctor.department.name }}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <i class="bi bi-clock"></i>
+                                        <span>{{ doctor.experience_years }} years exp.</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <i class="bi bi-currency-dollar"></i>
+                                        <span>${{ doctor.consultation_fee }}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <i class="bi bi-check-circle"></i>
+                                        <span>Available</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <input type="hidden" name="doctor" id="selectedDoctor">
+                    </div>
+                </div>
+                
+                <!-- Step 3: Date & Time -->
+                <div class="step-content" data-step="3">
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <div class="section-icon">
+                                <i class="bi bi-calendar"></i>
+                            </div>
+                            Select Date & Time
+                        </h3>
+                        
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Appointment Date</label>
+                                <input type="date" name="appointment_date" class="form-control" 
+                                       min="{{ today|date:'Y-m-d' }}" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Priority</label>
+                                <select name="priority" class="form-control">
+                                    <option value="NORMAL">Normal</option>
+                                    <option value="HIGH">High</option>
+                                    <option value="URGENT">Urgent</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Available Time Slots</label>
+                            <div class="time-slots" id="timeSlots">
+                                <!-- Time slots will be populated dynamically -->
+                                <div class="time-slot" data-time="09:00">9:00 AM</div>
+                                <div class="time-slot" data-time="09:30">9:30 AM</div>
+                                <div class="time-slot" data-time="10:00">10:00 AM</div>
+                                <div class="time-slot" data-time="10:30">10:30 AM</div>
+                                <div class="time-slot" data-time="11:00">11:00 AM</div>
+                                <div class="time-slot" data-time="11:30">11:30 AM</div>
+                                <div class="time-slot" data-time="14:00">2:00 PM</div>
+                                <div class="time-slot" data-time="14:30">2:30 PM</div>
+                                <div class="time-slot" data-time="15:00">3:00 PM</div>
+                                <div class="time-slot" data-time="15:30">3:30 PM</div>
+                                <div class="time-slot" data-time="16:00">4:00 PM</div>
+                                <div class="time-slot" data-time="16:30">4:30 PM</div>
+                            </div>
+                            <input type="hidden" name="appointment_time" id="selectedTime">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Step 4: Confirmation -->
+                <div class="step-content" data-step="4">
+                    <div class="appointment-summary">
+                        <h3 class="summary-title">
+                            <i class="bi bi-check-circle"></i>
+                            Appointment Summary
+                        </h3>
+                        
+                        <div class="summary-grid">
+                            <div class="summary-item">
+                                <div class="summary-label">Patient</div>
+                                <div class="summary-value" id="summaryPatient">--</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-label">Doctor</div>
+                                <div class="summary-value" id="summaryDoctor">--</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-label">Date</div>
+                                <div class="summary-value" id="summaryDate">--</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-label">Time</div>
+                                <div class="summary-value" id="summaryTime">--</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-label">Type</div>
+                                <div class="summary-value" id="summaryType">--</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-label">Fee</div>
+                                <div class="summary-value" id="summaryFee">--</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Additional Notes (Optional)</label>
+                        <textarea name="notes" class="form-control" rows="3" 
+                                  placeholder="Any additional information or special requests..."></textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Wizard Actions -->
+            <div class="wizard-actions">
+                <button type="button" class="btn-wizard btn-secondary-wizard" id="prevBtn" style="display: none;">
+                    <i class="bi bi-arrow-left"></i> Previous
+                </button>
+                
+                <div class="step-indicator">
+                    Step <span id="currentStep">1</span> of 4
+                </div>
+                
+                <button type="button" class="btn-wizard btn-primary-wizard" id="nextBtn">
+                    Next <i class="bi bi-arrow-right"></i>
+                </button>
+                
+                <button type="submit" class="btn-wizard btn-primary-wizard" id="submitBtn" style="display: none;">
+                    <i class="bi bi-check-lg"></i> Book Appointment
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentStep = 1;
+const totalSteps = 4;
+
+// Initialize wizard
+document.addEventListener('DOMContentLoaded', function() {
+    updateWizardState();
+    setupEventListeners();
+});
+
+function setupEventListeners() {
+    // Next button
+    document.getElementById('nextBtn').addEventListener('click', nextStep);
+    
+    // Previous button
+    document.getElementById('prevBtn').addEventListener('click', prevStep);
+    
+    // Doctor selection
+    document.querySelectorAll('.doctor-card').forEach(card => {
+        card.addEventListener('click', function() {
+            selectDoctor(this);
+        });
+    });
+    
+    // Time slot selection
+    document.querySelectorAll('.time-slot').forEach(slot => {
+        slot.addEventListener('click', function() {
+            if (!this.classList.contains('unavailable')) {
+                selectTimeSlot(this);
+            }
+        });
+    });
+    
+    // Form inputs for summary update
+    document.querySelectorAll('input, select, textarea').forEach(input => {
+        input.addEventListener('change', updateSummary);
+    });
+}
+
+function nextStep() {
+    if (validateCurrentStep()) {
+        if (currentStep < totalSteps) {
+            currentStep++;
+            updateWizardState();
+            updateSummary();
+        }
+    }
+}
+
+function prevStep() {
+    if (currentStep > 1) {
+        currentStep--;
+        updateWizardState();
+    }
+}
+
+function updateWizardState() {
+    // Update step circles
+    document.querySelectorAll('.step-circle').forEach((circle, index) => {
+        const stepNum = index + 1;
+        circle.classList.remove('active', 'completed');
+        
+        if (stepNum < currentStep) {
+            circle.classList.add('completed');
+            circle.innerHTML = '<i class="bi bi-check"></i>';
+        } else if (stepNum === currentStep) {
+            circle.classList.add('active');
+            circle.innerHTML = stepNum;
+        } else {
+            circle.innerHTML = stepNum;
+        }
+    });
+    
+    // Update step labels
+    document.querySelectorAll('.step-label').forEach((label, index) => {
+        const stepNum = index + 1;
+        label.classList.remove('active');
+        if (stepNum === currentStep) {
+            label.classList.add('active');
+        }
+    });
+    
+    // Update step content
+    document.querySelectorAll('.step-content').forEach((content, index) => {
+        const stepNum = index + 1;
+        content.classList.remove('active');
+        if (stepNum === currentStep) {
+            content.classList.add('active');
+        }
+    });
+    
+    // Update buttons
+    document.getElementById('prevBtn').style.display = currentStep > 1 ? 'block' : 'none';
+    document.getElementById('nextBtn').style.display = currentStep < totalSteps ? 'block' : 'none';
+    document.getElementById('submitBtn').style.display = currentStep === totalSteps ? 'block' : 'none';
+    
+    // Update step indicator
+    document.getElementById('currentStep').textContent = currentStep;
+}
+
+function validateCurrentStep() {
+    switch (currentStep) {
+        case 1:
+            const patient = document.querySelector('[name="patient"]').value;
+            const appointmentType = document.querySelector('[name="appointment_type"]').value;
+            if (!patient || !appointmentType) {
+                PremiumHMS.showNotification('Please fill in all required fields', 'warning');
+                return false;
+            }
+            break;
+        case 2:
+            const doctor = document.getElementById('selectedDoctor').value;
+            if (!doctor) {
+                PremiumHMS.showNotification('Please select a doctor', 'warning');
+                return false;
+            }
+            break;
+        case 3:
+            const date = document.querySelector('[name="appointment_date"]').value;
+            const time = document.getElementById('selectedTime').value;
+            if (!date || !time) {
+                PremiumHMS.showNotification('Please select date and time', 'warning');
+                return false;
+            }
+            break;
+    }
+    return true;
+}
+
+function selectDoctor(card) {
+    // Remove previous selection
+    document.querySelectorAll('.doctor-card').forEach(c => c.classList.remove('selected'));
+    
+    // Select current card
+    card.classList.add('selected');
+    
+    // Update hidden input
+    const doctorId = card.dataset.doctor;
+    document.getElementById('selectedDoctor').value = doctorId;
+}
+
+function selectTimeSlot(slot) {
+    // Remove previous selection
+    document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+    
+    // Select current slot
+    slot.classList.add('selected');
+    
+    // Update hidden input
+    const time = slot.dataset.time;
+    document.getElementById('selectedTime').value = time;
+}
+
+function updateSummary() {
+    if (currentStep === 4) {
+        // Update patient
+        const patientSelect = document.querySelector('[name="patient"]');
+        const patientText = patientSelect.options[patientSelect.selectedIndex]?.text || '--';
+        document.getElementById('summaryPatient').textContent = patientText;
+        
+        // Update doctor
+        const selectedDoctorCard = document.querySelector('.doctor-card.selected');
+        const doctorName = selectedDoctorCard?.querySelector('.doctor-name')?.textContent || '--';
+        document.getElementById('summaryDoctor').textContent = doctorName;
+        
+        // Update date
+        const date = document.querySelector('[name="appointment_date"]').value;
+        document.getElementById('summaryDate').textContent = date ? new Date(date).toLocaleDateString() : '--';
+        
+        // Update time
+        const selectedTimeSlot = document.querySelector('.time-slot.selected');
+        const timeText = selectedTimeSlot?.textContent || '--';
+        document.getElementById('summaryTime').textContent = timeText;
+        
+        // Update type
+        const typeSelect = document.querySelector('[name="appointment_type"]');
+        const typeText = typeSelect.options[typeSelect.selectedIndex]?.text || '--';
+        document.getElementById('summaryType').textContent = typeText;
+        
+        // Update fee
+        const fee = selectedDoctorCard?.querySelector('.detail-item:nth-child(3) span')?.textContent || '--';
+        document.getElementById('summaryFee').textContent = fee;
+    }
+}
+
+// Form submission
+document.getElementById('appointmentForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    if (validateCurrentStep()) {
+        PremiumHMS.showLoading('Booking appointment...');
+        
+        // Simulate API call
+        setTimeout(() => {
+            PremiumHMS.hideLoading();
+            PremiumHMS.showNotification('Appointment booked successfully!', 'success');
+            
+            // Redirect after success
+            setTimeout(() => {
+                window.location.href = "{% url 'appointments:appointment_list' %}";
+            }, 2000);
+        }, 2000);
+    }
+});
+</script>
+{% endblock %}

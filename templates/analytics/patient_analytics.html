@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Patient Analytics - Premium HMS{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'hospital_analytics:dashboard' %}">Analytics</a></li>
+<li class="breadcrumb-item active">Patient Analytics</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card premium-card">
+                <div class="card-header">
+                    <h4 class="card-title">
+                        <i class="bi bi-people me-2"></i>Patient Analytics
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>Gender Distribution</h5>
+                                </div>
+                                <div class="card-body">
+                                    {% for item in gender_distribution %}
+                                    <p>{{ item.gender|default:"Not Specified" }}: {{ item.count }}</p>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>Age Groups</h5>
+                                </div>
+                                <div class="card-body">
+                                    {% for age_group, count in age_groups.items %}
+                                    <p>{{ age_group }}: {{ count }}</p>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

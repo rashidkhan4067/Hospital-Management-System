@@ -1,0 +1,757 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dr. {{ doctor.user.get_full_name }} - Premium HMS{% endblock %}
+
+{% block extra_css %}
+<style>
+    .doctor-profile-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 24px;
+        padding: 40px;
+        margin-bottom: 32px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .doctor-profile-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        opacity: 0.3;
+    }
+    
+    .profile-content {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        gap: 32px;
+    }
+    
+    .profile-avatar {
+        width: 140px;
+        height: 140px;
+        border-radius: 24px;
+        background: rgba(255, 255, 255, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 56px;
+        font-weight: 700;
+        backdrop-filter: blur(10px);
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .profile-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 20px;
+    }
+    
+    .profile-info {
+        flex: 1;
+    }
+    
+    .profile-name {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+        background: linear-gradient(45deg, #ffffff, #e0e7ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .profile-specialty {
+        font-size: 1.25rem;
+        opacity: 0.9;
+        margin-bottom: 16px;
+        font-weight: 600;
+    }
+    
+    .profile-rating {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+    
+    .rating-stars {
+        display: flex;
+        gap: 4px;
+        font-size: 20px;
+        color: #fbbf24;
+    }
+    
+    .rating-text {
+        font-size: 1rem;
+        opacity: 0.9;
+    }
+    
+    .profile-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 24px;
+    }
+    
+    .profile-stat {
+        text-align: center;
+    }
+    
+    .profile-stat-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+    
+    .profile-stat-label {
+        font-size: 0.9rem;
+        opacity: 0.8;
+    }
+    
+    .profile-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 24px;
+    }
+    
+    .btn-profile {
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        padding: 12px 20px;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .btn-profile:hover {
+        background: rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 0.5);
+        color: white;
+        transform: translateY(-2px);
+    }
+    
+    .content-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 32px;
+        margin-bottom: 32px;
+    }
+    
+    .info-card {
+        background: linear-gradient(145deg, #ffffff, #f8fafc);
+        border-radius: 20px;
+        padding: 28px;
+        box-shadow: 
+            0 10px 40px rgba(0, 0, 0, 0.1),
+            0 4px 20px rgba(0, 0, 0, 0.05),
+            inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
+        margin-bottom: 24px;
+    }
+    
+    .info-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 
+            0 20px 60px rgba(0, 0, 0, 0.15),
+            0 8px 30px rgba(0, 0, 0, 0.1),
+            inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    }
+    
+    .card-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 2px solid var(--gray-100);
+    }
+    
+    .card-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, var(--success-500), var(--success-600));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 18px;
+        box-shadow: 0 4px 16px rgba(34, 197, 94, 0.3);
+    }
+    
+    .card-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--gray-900);
+    }
+    
+    .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+    
+    .info-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    
+    .info-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--gray-500);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .info-value {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--gray-900);
+    }
+    
+    .info-value.empty {
+        color: var(--gray-400);
+        font-style: italic;
+    }
+    
+    .full-width {
+        grid-column: 1 / -1;
+    }
+    
+    .schedule-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 8px;
+        margin-bottom: 20px;
+    }
+    
+    .schedule-day {
+        text-align: center;
+        padding: 12px 8px;
+        border-radius: 10px;
+        background: var(--gray-50);
+        border: 1px solid var(--gray-200);
+        transition: all 0.2s ease;
+    }
+    
+    .schedule-day.available {
+        background: var(--success-50);
+        border-color: var(--success-200);
+        color: var(--success-700);
+    }
+    
+    .schedule-day.busy {
+        background: var(--warning-50);
+        border-color: var(--warning-200);
+        color: var(--warning-700);
+    }
+    
+    .schedule-day.off {
+        background: var(--gray-100);
+        border-color: var(--gray-300);
+        color: var(--gray-500);
+    }
+    
+    .day-name {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+    }
+    
+    .day-time {
+        font-size: 12px;
+        font-weight: 500;
+    }
+    
+    .appointments-section {
+        background: linear-gradient(145deg, #ffffff, #f8fafc);
+        border-radius: 20px;
+        padding: 28px;
+        box-shadow: 
+            0 10px 40px rgba(0, 0, 0, 0.1),
+            0 4px 20px rgba(0, 0, 0, 0.05),
+            inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .appointments-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+    
+    .appointment-item {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px 0;
+        border-bottom: 1px solid var(--gray-100);
+        transition: all 0.2s ease;
+    }
+    
+    .appointment-item:hover {
+        background: var(--gray-50);
+        margin: 0 -16px;
+        padding: 16px;
+        border-radius: 12px;
+    }
+    
+    .appointment-item:last-child {
+        border-bottom: none;
+    }
+    
+    .appointment-time {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+        box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+    }
+    
+    .appointment-hour {
+        font-size: 16px;
+        line-height: 1;
+    }
+    
+    .appointment-period {
+        font-size: 10px;
+        opacity: 0.8;
+    }
+    
+    .appointment-details {
+        flex: 1;
+    }
+    
+    .appointment-patient {
+        font-weight: 600;
+        color: var(--gray-900);
+        margin-bottom: 4px;
+    }
+    
+    .appointment-type {
+        color: var(--gray-600);
+        font-size: 14px;
+        margin-bottom: 4px;
+    }
+    
+    .appointment-date {
+        color: var(--gray-500);
+        font-size: 13px;
+    }
+    
+    .appointment-status {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    
+    .status-confirmed {
+        background: var(--success-50);
+        color: var(--success-700);
+        border: 1px solid var(--success-200);
+    }
+    
+    .status-pending {
+        background: var(--warning-50);
+        color: var(--warning-700);
+        border: 1px solid var(--warning-200);
+    }
+    
+    .status-completed {
+        background: var(--primary-50);
+        color: var(--primary-700);
+        border: 1px solid var(--primary-200);
+    }
+    
+    .achievements-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+    }
+    
+    .achievement-item {
+        text-align: center;
+        padding: 20px;
+        background: var(--gray-50);
+        border-radius: 12px;
+        border: 1px solid var(--gray-200);
+    }
+    
+    .achievement-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, var(--warning-500), var(--warning-600));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 24px;
+        margin: 0 auto 12px;
+        box-shadow: 0 4px 16px rgba(245, 158, 11, 0.3);
+    }
+    
+    .achievement-title {
+        font-weight: 600;
+        color: var(--gray-900);
+        margin-bottom: 4px;
+    }
+    
+    .achievement-description {
+        font-size: 13px;
+        color: var(--gray-600);
+    }
+    
+    @media (max-width: 768px) {
+        .content-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .profile-content {
+            flex-direction: column;
+            text-align: center;
+            gap: 24px;
+        }
+        
+        .profile-name {
+            font-size: 2rem;
+        }
+        
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .schedule-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+        
+        .appointment-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        
+        .achievements-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">Dashboard</a></li>
+<li class="breadcrumb-item"><a href="{% url 'doctors:doctor_list' %}">Medical Staff</a></li>
+<li class="breadcrumb-item active">Dr. {{ doctor.user.get_full_name }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="doctor-detail-content">
+    <!-- Doctor Profile Header -->
+    <div class="doctor-profile-header">
+        <div class="profile-content">
+            <div class="profile-avatar">
+                {% if doctor.user.profile_picture %}
+                    <img src="{{ doctor.user.profile_picture.url }}" alt="Dr. {{ doctor.user.get_full_name }}">
+                {% else %}
+                    {{ doctor.user.first_name|first }}{{ doctor.user.last_name|first }}
+                {% endif %}
+            </div>
+            
+            <div class="profile-info">
+                <h1 class="profile-name">Dr. {{ doctor.user.get_full_name }}</h1>
+                <p class="profile-specialty">{{ doctor.specialization }}</p>
+                
+                <div class="profile-rating">
+                    <div class="rating-stars">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-half"></i>
+                    </div>
+                    <span class="rating-text">4.8 out of 5 (124 patient reviews)</span>
+                </div>
+                
+                <div class="profile-stats">
+                    <div class="profile-stat">
+                        <div class="profile-stat-value">{{ doctor.experience_years }}</div>
+                        <div class="profile-stat-label">Years Experience</div>
+                    </div>
+                    <div class="profile-stat">
+                        <div class="profile-stat-value">{{ doctor.appointments.count }}</div>
+                        <div class="profile-stat-label">Total Appointments</div>
+                    </div>
+                    <div class="profile-stat">
+                        <div class="profile-stat-value">{{ doctor.patients.count }}</div>
+                        <div class="profile-stat-label">Patients Treated</div>
+                    </div>
+                    <div class="profile-stat">
+                        <div class="profile-stat-value">98%</div>
+                        <div class="profile-stat-label">Success Rate</div>
+                    </div>
+                </div>
+                
+                <div class="profile-actions">
+                    <a href="{% url 'appointments:appointment_create' %}?doctor={{ doctor.pk }}" class="btn-profile">
+                        <i class="bi bi-calendar-plus"></i> Book Appointment
+                    </a>
+                    <a href="{% url 'doctors:doctor_update' doctor.pk %}" class="btn-profile">
+                        <i class="bi bi-pencil"></i> Edit Profile
+                    </a>
+                    <a href="#" class="btn-profile">
+                        <i class="bi bi-chat-dots"></i> Send Message
+                    </a>
+                    <a href="#" class="btn-profile">
+                        <i class="bi bi-telephone"></i> Call Doctor
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Content Grid -->
+    <div class="content-grid">
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Professional Information -->
+            <div class="info-card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="bi bi-person-badge"></i>
+                    </div>
+                    <h3 class="card-title">Professional Information</h3>
+                </div>
+                
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Specialization</div>
+                        <div class="info-value">{{ doctor.specialization }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Department</div>
+                        <div class="info-value">{{ doctor.department.name }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">License Number</div>
+                        <div class="info-value">{{ doctor.license_number|default:"Not provided" }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Consultation Fee</div>
+                        <div class="info-value">${{ doctor.consultation_fee }}</div>
+                    </div>
+                    <div class="info-item full-width">
+                        <div class="info-label">Education & Qualifications</div>
+                        <div class="info-value">
+                            {% if doctor.education %}
+                                {{ doctor.education }}
+                            {% else %}
+                                <span class="empty">Not provided</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="info-item full-width">
+                        <div class="info-label">Bio & Experience</div>
+                        <div class="info-value">
+                            {% if doctor.bio %}
+                                {{ doctor.bio }}
+                            {% else %}
+                                <span class="empty">No bio available</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Contact Information -->
+            <div class="info-card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="bi bi-telephone"></i>
+                    </div>
+                    <h3 class="card-title">Contact Information</h3>
+                </div>
+                
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Email</div>
+                        <div class="info-value">{{ doctor.user.email }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Phone</div>
+                        <div class="info-value">
+                            {% if doctor.user.phone_number %}
+                                {{ doctor.user.phone_number }}
+                            {% else %}
+                                <span class="empty">Not provided</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="info-item full-width">
+                        <div class="info-label">Office Address</div>
+                        <div class="info-value">
+                            {% if doctor.user.address %}
+                                {{ doctor.user.address }}
+                            {% else %}
+                                <span class="empty">Not provided</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Achievements & Certifications -->
+            <div class="info-card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="bi bi-award"></i>
+                    </div>
+                    <h3 class="card-title">Achievements & Certifications</h3>
+                </div>
+                
+                <div class="achievements-grid">
+                    <div class="achievement-item">
+                        <div class="achievement-icon">
+                            <i class="bi bi-trophy"></i>
+                        </div>
+                        <div class="achievement-title">Excellence Award</div>
+                        <div class="achievement-description">Outstanding Patient Care 2023</div>
+                    </div>
+                    <div class="achievement-item">
+                        <div class="achievement-icon">
+                            <i class="bi bi-patch-check"></i>
+                        </div>
+                        <div class="achievement-title">Board Certified</div>
+                        <div class="achievement-description">{{ doctor.specialization }}</div>
+                    </div>
+                    <div class="achievement-item">
+                        <div class="achievement-icon">
+                            <i class="bi bi-mortarboard"></i>
+                        </div>
+                        <div class="achievement-title">Research Publications</div>
+                        <div class="achievement-description">15+ Medical Papers</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="sidebar-content">
+            <!-- Weekly Schedule -->
+            <div class="info-card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="bi bi-calendar-week"></i>
+                    </div>
+                    <h3 class="card-title">Weekly Schedule</h3>
+                </div>
+                
+                <div class="schedule-grid">
+                    <div class="schedule-day available">
+                        <div class="day-name">Mon</div>
+                        <div class="day-time">9AM-5PM</div>
+                    </div>
+                    <div class="schedule-day available">
+                        <div class="day-name">Tue</div>
+                        <div class="day-time">9AM-5PM</div>
+                    </div>
+                    <div class="schedule-day available">
+                        <div class="day-name">Wed</div>
+                        <div class="day-time">9AM-3PM</div>
+                    </div>
+                    <div class="schedule-day available">
+                        <div class="day-name">Thu</div>
+                        <div class="day-time">9AM-5PM</div>
+                    </div>
+                    <div class="schedule-day busy">
+                        <div class="day-name">Fri</div>
+                        <div class="day-time">9AM-1PM</div>
+                    </div>
+                    <div class="schedule-day off">
+                        <div class="day-name">Sat</div>
+                        <div class="day-time">Off</div>
+                    </div>
+                    <div class="schedule-day off">
+                        <div class="day-name">Sun</div>
+                        <div class="day-time">Off</div>
+                    </div>
+                </div>
+                
+                <div class="text-center">
+                    <a href="{% url 'appointments:appointment_create' %}?doctor={{ doctor.pk }}" class="btn btn-primary">
+                        <i class="bi bi-calendar-plus"></i> Book Appointment
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Appointments -->
+    <div class="appointments-section">
+        <div class="appointments-header">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i class="bi bi-calendar-event"></i>
+                </div>
+                <h3 class="card-title">Recent Appointments</h3>
+            </div>
+            <a href="{% url 'appointments:appointment_list' %}?doctor={{ doctor.pk }}" class="btn btn-outline-primary">
+                View All Appointments
+            </a>
+        </div>
+        
+        <div class="appointments-list">
+            {% for appointment in doctor.appointments.all|slice:":5" %}
+            <div class="appointment-item">
+                <div class="appointment-time">
+                    <div class="appointment-hour">{{ appointment.appointment_time|time:"g:i" }}</div>
+                    <div class="appointment-period">{{ appointment.appointment_time|time:"A" }}</div>
+                </div>
+                <div class="appointment-details">
+                    <div class="appointment-patient">{{ appointment.patient.full_name }}</div>
+                    <div class="appointment-type">{{ appointment.get_appointment_type_display }}</div>
+                    <div class="appointment-date">{{ appointment.appointment_date|date:"M d, Y" }}</div>
+                </div>
+                <div class="appointment-status status-{{ appointment.status|lower }}">
+                    {{ appointment.get_status_display }}
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-4">
+                <i class="bi bi-calendar-x display-4 text-muted"></i>
+                <h5 class="mt-3">No recent appointments</h5>
+                <p class="text-muted">This doctor has no recent appointment history.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

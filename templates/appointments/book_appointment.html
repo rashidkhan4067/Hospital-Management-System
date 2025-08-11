@@ -1,0 +1,297 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Book Appointment - Premium HMS{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'appointments:appointment_list' %}">Appointments</a></li>
+<li class="breadcrumb-item active">Book Appointment</li>
+{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'appointments:appointment_list' %}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i> Back to Appointments
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="premium-card">
+            <div class="card-header">
+                <div class="d-flex align-items-center">
+                    <div class="icon-wrapper me-3">
+                        <i class="bi bi-calendar-plus text-primary"></i>
+                    </div>
+                    <div>
+                        <h4 class="card-title mb-0">Book New Appointment</h4>
+                        <p class="card-subtitle text-muted mb-0">Schedule an appointment with a doctor</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <form method="post" class="premium-form" id="bookAppointmentForm">
+                    {% csrf_token %}
+                    
+                    <div class="form-section">
+                        <h5 class="section-title">
+                            <i class="bi bi-person-badge"></i> Doctor Selection
+                        </h5>
+                        
+                        <div class="form-group">
+                            <label for="{{ form.doctor.id_for_label }}" class="form-label">Select Doctor</label>
+                            {{ form.doctor }}
+                            {% if form.doctor.errors %}
+                                <div class="invalid-feedback d-block">{{ form.doctor.errors.0 }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">Choose the doctor you want to consult with</small>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h5 class="section-title">
+                            <i class="bi bi-calendar-event"></i> Appointment Details
+                        </h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.appointment_type.id_for_label }}" class="form-label">Appointment Type</label>
+                                    {{ form.appointment_type }}
+                                    {% if form.appointment_type.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.appointment_type.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.duration_minutes.id_for_label }}" class="form-label">Duration (minutes)</label>
+                                    {{ form.duration_minutes }}
+                                    {% if form.duration_minutes.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.duration_minutes.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.appointment_date.id_for_label }}" class="form-label">Preferred Date</label>
+                                    {{ form.appointment_date }}
+                                    {% if form.appointment_date.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.appointment_date.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.appointment_time.id_for_label }}" class="form-label">Preferred Time</label>
+                                    {{ form.appointment_time }}
+                                    {% if form.appointment_time.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.appointment_time.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h5 class="section-title">
+                            <i class="bi bi-clipboard-heart"></i> Medical Information
+                        </h5>
+                        
+                        <div class="form-group">
+                            <label for="{{ form.symptoms.id_for_label }}" class="form-label">Symptoms / Reason for Visit</label>
+                            {{ form.symptoms }}
+                            {% if form.symptoms.errors %}
+                                <div class="invalid-feedback d-block">{{ form.symptoms.errors.0 }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">Please describe your symptoms or reason for the appointment</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="{{ form.notes.id_for_label }}" class="form-label">Additional Notes</label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}
+                                <div class="invalid-feedback d-block">{{ form.notes.errors.0 }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">Any additional information you'd like the doctor to know</small>
+                        </div>
+                    </div>
+                    
+                    <!-- Doctor Availability Display -->
+                    <div class="form-section" id="doctorAvailability" style="display: none;">
+                        <h5 class="section-title">
+                            <i class="bi bi-clock"></i> Doctor Availability
+                        </h5>
+                        <div id="availabilityInfo" class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Select a doctor to see their availability schedule.
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Book Appointment
+                        </button>
+                        <a href="{% url 'appointments:appointment_list' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Appointment Confirmation Modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Appointment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="appointment-summary">
+                    <h6>Appointment Summary</h6>
+                    <div class="summary-item">
+                        <strong>Doctor:</strong> <span id="summaryDoctor">-</span>
+                    </div>
+                    <div class="summary-item">
+                        <strong>Date:</strong> <span id="summaryDate">-</span>
+                    </div>
+                    <div class="summary-item">
+                        <strong>Time:</strong> <span id="summaryTime">-</span>
+                    </div>
+                    <div class="summary-item">
+                        <strong>Type:</strong> <span id="summaryType">-</span>
+                    </div>
+                    <div class="summary-item">
+                        <strong>Duration:</strong> <span id="summaryDuration">-</span> minutes
+                    </div>
+                </div>
+                <div class="alert alert-warning mt-3">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Please review the appointment details carefully. Once confirmed, you will receive a confirmation email.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Review</button>
+                <button type="button" class="btn btn-primary" id="confirmBooking">Confirm Booking</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-section {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.form-section:last-of-type {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.section-title {
+    color: #495057;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.section-title i {
+    margin-right: 0.5rem;
+    color: #007bff;
+}
+
+.appointment-summary .summary-item {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f8f9fa;
+}
+
+.appointment-summary .summary-item:last-child {
+    border-bottom: none;
+}
+
+.availability-slot {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    margin: 0.25rem;
+    background: #e3f2fd;
+    border: 1px solid #bbdefb;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+}
+
+.availability-slot.unavailable {
+    background: #ffebee;
+    border-color: #ffcdd2;
+    color: #c62828;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('bookAppointmentForm');
+    const doctorSelect = document.getElementById('{{ form.doctor.id_for_label }}');
+    const dateInput = document.getElementById('{{ form.appointment_date.id_for_label }}');
+    const timeInput = document.getElementById('{{ form.appointment_time.id_for_label }}');
+    const availabilitySection = document.getElementById('doctorAvailability');
+    const availabilityInfo = document.getElementById('availabilityInfo');
+    
+    // Set minimum date to today
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.min = today;
+    
+    // Handle doctor selection
+    doctorSelect.addEventListener('change', function() {
+        if (this.value) {
+            showDoctorAvailability(this.value);
+        } else {
+            availabilitySection.style.display = 'none';
+        }
+    });
+    
+    // Handle form submission with confirmation
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        showConfirmationModal();
+    });
+    
+    // Confirm booking
+    document.getElementById('confirmBooking').addEventListener('click', function() {
+        form.submit();
+    });
+    
+    function showDoctorAvailability(doctorId) {
+        // This would typically fetch doctor availability via AJAX
+        availabilitySection.style.display = 'block';
+        availabilityInfo.innerHTML = `
+            <i class="bi bi-clock me-2"></i>
+            Doctor availability information would be loaded here via AJAX.
+            <br><small class="text-muted">Typical hours: Monday-Friday 9:00 AM - 5:00 PM</small>
+        `;
+    }
+    
+    function showConfirmationModal() {
+        // Populate summary
+        const doctorText = doctorSelect.options[doctorSelect.selectedIndex].text;
+        const typeText = document.getElementById('{{ form.appointment_type.id_for_label }}').options[document.getElementById('{{ form.appointment_type.id_for_label }}').selectedIndex].text;
+        
+        document.getElementById('summaryDoctor').textContent = doctorText;
+        document.getElementById('summaryDate').textContent = dateInput.value;
+        document.getElementById('summaryTime').textContent = timeInput.value;
+        document.getElementById('summaryType').textContent = typeText;
+        document.getElementById('summaryDuration').textContent = document.getElementById('{{ form.duration_minutes.id_for_label }}').value;
+        
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+        modal.show();
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,457 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Appointments - Premium HMS{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">My Appointments</li>
+{% endblock %}
+
+{% block page_actions %}
+{% if user.role == 'PATIENT' %}
+<a href="{% url 'appointments:appointment_create' %}" class="btn btn-primary">
+    <i class="bi bi-calendar-plus"></i> Book New Appointment
+</a>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Welcome Section -->
+    <div class="welcome-section mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h2 class="welcome-title">
+                    {% if user.role == 'PATIENT' %}
+                        Your Appointments
+                    {% elif user.role == 'DOCTOR' %}
+                        Your Schedule
+                    {% endif %}
+                </h2>
+                <p class="welcome-subtitle">
+                    {% if user.role == 'PATIENT' %}
+                        Manage your upcoming and past appointments
+                    {% elif user.role == 'DOCTOR' %}
+                        View and manage your patient appointments
+                    {% endif %}
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="stats-mini">
+                    <div class="stat-mini">
+                        <span class="stat-number">{{ upcoming_count|default:0 }}</span>
+                        <span class="stat-label">Upcoming</span>
+                    </div>
+                    <div class="stat-mini">
+                        <span class="stat-number">{{ total_count|default:0 }}</span>
+                        <span class="stat-label">Total</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="filter-tabs mb-4">
+        <ul class="nav nav-pills" id="appointmentTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="upcoming-tab" data-bs-toggle="pill" 
+                        data-bs-target="#upcoming" type="button" role="tab">
+                    <i class="bi bi-calendar-event"></i> Upcoming
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="past-tab" data-bs-toggle="pill" 
+                        data-bs-target="#past" type="button" role="tab">
+                    <i class="bi bi-calendar-check"></i> Past
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="cancelled-tab" data-bs-toggle="pill" 
+                        data-bs-target="#cancelled" type="button" role="tab">
+                    <i class="bi bi-calendar-x"></i> Cancelled
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="appointmentTabsContent">
+        <!-- Upcoming Appointments -->
+        <div class="tab-pane fade show active" id="upcoming" role="tabpanel">
+            {% if upcoming_appointments %}
+                <div class="row">
+                    {% for appointment in upcoming_appointments %}
+                    <div class="col-lg-6 col-xl-4 mb-4">
+                        <div class="appointment-card">
+                            <div class="appointment-header">
+                                <div class="appointment-date">
+                                    <div class="date-day">{{ appointment.appointment_date|date:"d" }}</div>
+                                    <div class="date-month">{{ appointment.appointment_date|date:"M" }}</div>
+                                </div>
+                                <div class="appointment-time">
+                                    <i class="bi bi-clock"></i>
+                                    {{ appointment.appointment_time|time:"g:i A" }}
+                                </div>
+                                <span class="appointment-status status-{{ appointment.status|lower }}">
+                                    {{ appointment.status|title }}
+                                </span>
+                            </div>
+                            <div class="appointment-body">
+                                {% if user.role == 'PATIENT' %}
+                                    <h6 class="appointment-title">
+                                        <i class="bi bi-person-badge"></i>
+                                        Dr. {{ appointment.doctor.user.get_full_name }}
+                                    </h6>
+                                    <p class="appointment-specialty">{{ appointment.doctor.specialization }}</p>
+                                {% elif user.role == 'DOCTOR' %}
+                                    <h6 class="appointment-title">
+                                        <i class="bi bi-person"></i>
+                                        {{ appointment.patient.user.get_full_name }}
+                                    </h6>
+                                    <p class="appointment-specialty">{{ appointment.patient.user.phone|default:"No phone" }}</p>
+                                {% endif %}
+                                {% if appointment.reason %}
+                                    <p class="appointment-reason">{{ appointment.reason|truncatechars:60 }}</p>
+                                {% endif %}
+                            </div>
+                            <div class="appointment-actions">
+                                <a href="{% url 'appointments:appointment_detail' appointment.pk %}" 
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
+                                {% if appointment.status != 'CANCELLED' and appointment.status != 'COMPLETED' %}
+                                    <a href="{% url 'appointments:appointment_edit' appointment.pk %}" 
+                                       class="btn btn-sm btn-outline-warning">
+                                        <i class="bi bi-pencil"></i> Edit
+                                    </a>
+                                    <a href="{% url 'appointments:appointment_cancel' appointment.pk %}" 
+                                       class="btn btn-sm btn-outline-danger"
+                                       onclick="return confirm('Are you sure you want to cancel this appointment?')">
+                                        <i class="bi bi-x-circle"></i> Cancel
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="bi bi-calendar-event"></i>
+                    </div>
+                    <h5>No Upcoming Appointments</h5>
+                    <p class="text-muted">
+                        {% if user.role == 'PATIENT' %}
+                            You don't have any upcoming appointments scheduled.
+                        {% elif user.role == 'DOCTOR' %}
+                            You don't have any upcoming patient appointments.
+                        {% endif %}
+                    </p>
+                    {% if user.role == 'PATIENT' %}
+                        <a href="{% url 'appointments:appointment_create' %}" class="btn btn-primary">
+                            <i class="bi bi-calendar-plus"></i> Book Your First Appointment
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Past Appointments -->
+        <div class="tab-pane fade" id="past" role="tabpanel">
+            {% if past_appointments %}
+                <div class="row">
+                    {% for appointment in past_appointments %}
+                    <div class="col-lg-6 col-xl-4 mb-4">
+                        <div class="appointment-card appointment-card-past">
+                            <div class="appointment-header">
+                                <div class="appointment-date">
+                                    <div class="date-day">{{ appointment.appointment_date|date:"d" }}</div>
+                                    <div class="date-month">{{ appointment.appointment_date|date:"M" }}</div>
+                                </div>
+                                <div class="appointment-time">
+                                    <i class="bi bi-clock"></i>
+                                    {{ appointment.appointment_time|time:"g:i A" }}
+                                </div>
+                                <span class="appointment-status status-completed">
+                                    Completed
+                                </span>
+                            </div>
+                            <div class="appointment-body">
+                                {% if user.role == 'PATIENT' %}
+                                    <h6 class="appointment-title">
+                                        <i class="bi bi-person-badge"></i>
+                                        Dr. {{ appointment.doctor.user.get_full_name }}
+                                    </h6>
+                                    <p class="appointment-specialty">{{ appointment.doctor.specialization }}</p>
+                                {% elif user.role == 'DOCTOR' %}
+                                    <h6 class="appointment-title">
+                                        <i class="bi bi-person"></i>
+                                        {{ appointment.patient.user.get_full_name }}
+                                    </h6>
+                                    <p class="appointment-specialty">{{ appointment.patient.user.phone|default:"No phone" }}</p>
+                                {% endif %}
+                                {% if appointment.reason %}
+                                    <p class="appointment-reason">{{ appointment.reason|truncatechars:60 }}</p>
+                                {% endif %}
+                            </div>
+                            <div class="appointment-actions">
+                                <a href="{% url 'appointments:appointment_detail' appointment.pk %}" 
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i> View Details
+                                </a>
+                                {% if user.role == 'PATIENT' %}
+                                    <a href="{% url 'appointments:appointment_create' %}?doctor={{ appointment.doctor.pk }}" 
+                                       class="btn btn-sm btn-outline-success">
+                                        <i class="bi bi-arrow-repeat"></i> Book Again
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="bi bi-calendar-check"></i>
+                    </div>
+                    <h5>No Past Appointments</h5>
+                    <p class="text-muted">Your completed appointments will appear here.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Cancelled Appointments -->
+        <div class="tab-pane fade" id="cancelled" role="tabpanel">
+            {% if cancelled_appointments %}
+                <div class="row">
+                    {% for appointment in cancelled_appointments %}
+                    <div class="col-lg-6 col-xl-4 mb-4">
+                        <div class="appointment-card appointment-card-cancelled">
+                            <div class="appointment-header">
+                                <div class="appointment-date">
+                                    <div class="date-day">{{ appointment.appointment_date|date:"d" }}</div>
+                                    <div class="date-month">{{ appointment.appointment_date|date:"M" }}</div>
+                                </div>
+                                <div class="appointment-time">
+                                    <i class="bi bi-clock"></i>
+                                    {{ appointment.appointment_time|time:"g:i A" }}
+                                </div>
+                                <span class="appointment-status status-cancelled">
+                                    Cancelled
+                                </span>
+                            </div>
+                            <div class="appointment-body">
+                                {% if user.role == 'PATIENT' %}
+                                    <h6 class="appointment-title">
+                                        <i class="bi bi-person-badge"></i>
+                                        Dr. {{ appointment.doctor.user.get_full_name }}
+                                    </h6>
+                                    <p class="appointment-specialty">{{ appointment.doctor.specialization }}</p>
+                                {% elif user.role == 'DOCTOR' %}
+                                    <h6 class="appointment-title">
+                                        <i class="bi bi-person"></i>
+                                        {{ appointment.patient.user.get_full_name }}
+                                    </h6>
+                                    <p class="appointment-specialty">{{ appointment.patient.user.phone|default:"No phone" }}</p>
+                                {% endif %}
+                                {% if appointment.reason %}
+                                    <p class="appointment-reason">{{ appointment.reason|truncatechars:60 }}</p>
+                                {% endif %}
+                            </div>
+                            <div class="appointment-actions">
+                                <a href="{% url 'appointments:appointment_detail' appointment.pk %}" 
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i> View Details
+                                </a>
+                                {% if user.role == 'PATIENT' %}
+                                    <a href="{% url 'appointments:appointment_create' %}?doctor={{ appointment.doctor.pk }}" 
+                                       class="btn btn-sm btn-outline-success">
+                                        <i class="bi bi-calendar-plus"></i> Reschedule
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="bi bi-calendar-x"></i>
+                    </div>
+                    <h5>No Cancelled Appointments</h5>
+                    <p class="text-muted">Your cancelled appointments will appear here.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.welcome-section {
+    background: linear-gradient(135deg, var(--primary-50), var(--primary-100));
+    border-radius: 12px;
+    padding: 2rem;
+    border-left: 4px solid var(--primary-500);
+}
+
+.welcome-title {
+    color: var(--primary-700);
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.welcome-subtitle {
+    color: var(--primary-600);
+    margin: 0;
+}
+
+.stats-mini {
+    display: flex;
+    gap: 2rem;
+}
+
+.stat-mini {
+    text-align: center;
+}
+
+.stat-mini .stat-number {
+    display: block;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-600);
+}
+
+.stat-mini .stat-label {
+    font-size: 0.875rem;
+    color: var(--primary-500);
+    font-weight: 500;
+}
+
+.filter-tabs .nav-pills .nav-link {
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    margin-right: 0.5rem;
+    color: var(--gray-600);
+    background: var(--gray-100);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.filter-tabs .nav-pills .nav-link.active {
+    background: var(--primary-500);
+    color: white;
+}
+
+.appointment-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    border-left: 4px solid var(--primary-500);
+}
+
+.appointment-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.appointment-card-past {
+    border-left-color: var(--gray-400);
+}
+
+.appointment-card-cancelled {
+    border-left-color: var(--danger-500);
+}
+
+.appointment-header {
+    background: var(--gray-50);
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.appointment-date {
+    text-align: center;
+}
+
+.date-day {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-600);
+    line-height: 1;
+}
+
+.date-month {
+    font-size: 0.875rem;
+    color: var(--primary-500);
+    font-weight: 500;
+}
+
+.appointment-time {
+    font-size: 0.9rem;
+    color: var(--gray-600);
+    font-weight: 500;
+}
+
+.appointment-status {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-confirmed { background: var(--success-100); color: var(--success-700); }
+.status-pending { background: var(--warning-100); color: var(--warning-700); }
+.status-completed { background: var(--primary-100); color: var(--primary-700); }
+.status-cancelled { background: var(--danger-100); color: var(--danger-700); }
+
+.appointment-body {
+    padding: 1rem;
+}
+
+.appointment-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--gray-800);
+    margin-bottom: 0.5rem;
+}
+
+.appointment-specialty {
+    font-size: 0.875rem;
+    color: var(--gray-600);
+    margin-bottom: 0.5rem;
+}
+
+.appointment-reason {
+    font-size: 0.875rem;
+    color: var(--gray-700);
+    margin: 0;
+}
+
+.appointment-actions {
+    padding: 1rem;
+    border-top: 1px solid var(--gray-200);
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    color: var(--gray-400);
+    margin-bottom: 1rem;
+}
+</style>
+{% endblock %}

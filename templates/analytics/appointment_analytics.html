@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Appointment Analytics - Premium HMS{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'hospital_analytics:dashboard' %}">Analytics</a></li>
+<li class="breadcrumb-item active">Appointment Analytics</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card premium-card">
+                <div class="card-header">
+                    <h4 class="card-title">
+                        <i class="bi bi-calendar-event me-2"></i>Appointment Analytics
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>Status Distribution</h5>
+                                </div>
+                                <div class="card-body">
+                                    {% for item in status_distribution %}
+                                    <p>{{ item.status }}: {{ item.count }}</p>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>Monthly Appointments</h5>
+                                </div>
+                                <div class="card-body">
+                                    {% for month, count in monthly_appointments.items %}
+                                    <p>{{ month }}: {{ count }}</p>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

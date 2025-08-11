@@ -1,0 +1,671 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Billing Management - Premium HMS{% endblock %}
+
+{% block extra_css %}
+<style>
+    .billing-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 24px;
+        padding: 40px;
+        margin-bottom: 32px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .billing-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M20 20c0-5.5-4.5-10-10-10s-10 4.5-10 10 4.5 10 10 10 10-4.5 10-10zm10 0c0-5.5-4.5-10-10-10s-10 4.5-10 10 4.5 10 10 10 10-4.5 10-10z'/%3E%3C/g%3E%3C/svg%3E");
+    }
+    
+    .header-content {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .header-info {
+        flex: 1;
+    }
+    
+    .header-title {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+        background: linear-gradient(45deg, #ffffff, #e0e7ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .header-subtitle {
+        opacity: 0.9;
+        font-size: 1.1rem;
+    }
+    
+    .header-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+        min-width: 400px;
+    }
+    
+    .header-stat {
+        text-align: center;
+        padding: 16px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        backdrop-filter: blur(10px);
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.8;
+    }
+    
+    .billing-controls {
+        background: linear-gradient(145deg, #ffffff, #f8fafc);
+        border-radius: 20px;
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: 
+            0 10px 40px rgba(0, 0, 0, 0.1),
+            0 4px 20px rgba(0, 0, 0, 0.05),
+            inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .controls-row {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr auto;
+        gap: 16px;
+        align-items: end;
+    }
+    
+    .form-group {
+        margin-bottom: 0;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: var(--gray-700);
+        margin-bottom: 8px;
+        font-size: 14px;
+    }
+    
+    .form-control {
+        border: 2px solid var(--gray-200);
+        border-radius: 12px;
+        padding: 12px 16px;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        background: white;
+    }
+    
+    .form-control:focus {
+        border-color: var(--primary-500);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        outline: none;
+    }
+    
+    .bills-grid {
+        display: grid;
+        gap: 20px;
+    }
+    
+    .bill-card {
+        background: linear-gradient(145deg, #ffffff, #f8fafc);
+        border-radius: 20px;
+        padding: 24px;
+        box-shadow: 
+            0 10px 40px rgba(0, 0, 0, 0.1),
+            0 4px 20px rgba(0, 0, 0, 0.05),
+            inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .bill-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        border-radius: 20px 20px 0 0;
+    }
+    
+    .bill-card.status-paid::before {
+        background: linear-gradient(90deg, var(--success-500), var(--success-600));
+    }
+    
+    .bill-card.status-pending::before {
+        background: linear-gradient(90deg, var(--warning-500), var(--warning-600));
+    }
+    
+    .bill-card.status-overdue::before {
+        background: linear-gradient(90deg, var(--danger-500), var(--danger-600));
+    }
+    
+    .bill-card.status-draft::before {
+        background: linear-gradient(90deg, var(--gray-400), var(--gray-500));
+    }
+    
+    .bill-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 
+            0 20px 60px rgba(0, 0, 0, 0.15),
+            0 8px 30px rgba(0, 0, 0, 0.1),
+            inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    }
+    
+    .bill-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 20px;
+    }
+    
+    .bill-info {
+        flex: 1;
+    }
+    
+    .bill-number {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--gray-900);
+        margin-bottom: 4px;
+    }
+    
+    .bill-patient {
+        color: var(--gray-600);
+        font-size: 14px;
+        margin-bottom: 8px;
+    }
+    
+    .bill-date {
+        color: var(--gray-500);
+        font-size: 13px;
+        font-weight: 500;
+    }
+    
+    .bill-amount {
+        text-align: right;
+    }
+    
+    .amount-total {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--gray-900);
+        margin-bottom: 4px;
+    }
+    
+    .amount-status {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-paid {
+        background: var(--success-50);
+        color: var(--success-700);
+        border: 1px solid var(--success-200);
+    }
+    
+    .status-pending {
+        background: var(--warning-50);
+        color: var(--warning-700);
+        border: 1px solid var(--warning-200);
+    }
+    
+    .status-overdue {
+        background: var(--danger-50);
+        color: var(--danger-700);
+        border: 1px solid var(--danger-200);
+    }
+    
+    .status-draft {
+        background: var(--gray-50);
+        color: var(--gray-700);
+        border: 1px solid var(--gray-200);
+    }
+    
+    .bill-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 16px;
+        margin-bottom: 20px;
+        padding: 16px;
+        background: var(--gray-50);
+        border-radius: 12px;
+    }
+    
+    .detail-item {
+        text-align: center;
+    }
+    
+    .detail-value {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--gray-900);
+        margin-bottom: 4px;
+    }
+    
+    .detail-label {
+        font-size: 12px;
+        color: var(--gray-600);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .bill-actions {
+        display: flex;
+        gap: 8px;
+    }
+    
+    .btn-action {
+        flex: 1;
+        padding: 10px 16px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+        text-align: center;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+    
+    .btn-primary-action {
+        background: var(--primary-500);
+        color: white;
+    }
+    
+    .btn-primary-action:hover {
+        background: var(--primary-600);
+        transform: translateY(-1px);
+        color: white;
+    }
+    
+    .btn-secondary-action {
+        background: var(--gray-100);
+        color: var(--gray-700);
+    }
+    
+    .btn-secondary-action:hover {
+        background: var(--gray-200);
+        transform: translateY(-1px);
+        color: var(--gray-700);
+    }
+    
+    .btn-success-action {
+        background: var(--success-500);
+        color: white;
+    }
+    
+    .btn-success-action:hover {
+        background: var(--success-600);
+        transform: translateY(-1px);
+        color: white;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: linear-gradient(145deg, #ffffff, #f8fafc);
+        border-radius: 20px;
+        box-shadow: 
+            0 10px 40px rgba(0, 0, 0, 0.1),
+            0 4px 20px rgba(0, 0, 0, 0.05),
+            inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .empty-icon {
+        font-size: 4rem;
+        color: var(--gray-300);
+        margin-bottom: 24px;
+    }
+    
+    .empty-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--gray-900);
+        margin-bottom: 8px;
+    }
+    
+    .empty-description {
+        color: var(--gray-600);
+        margin-bottom: 24px;
+    }
+    
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 32px;
+    }
+    
+    .pagination {
+        background: linear-gradient(145deg, #ffffff, #f8fafc);
+        border-radius: 16px;
+        padding: 8px;
+        box-shadow: 
+            0 10px 40px rgba(0, 0, 0, 0.1),
+            0 4px 20px rgba(0, 0, 0, 0.05),
+            inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .page-link {
+        border: none;
+        background: none;
+        color: var(--gray-600);
+        padding: 12px 16px;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+    
+    .page-link:hover {
+        background: var(--primary-50);
+        color: var(--primary-600);
+    }
+    
+    .page-item.active .page-link {
+        background: var(--primary-500);
+        color: white;
+        box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+    }
+    
+    @media (max-width: 768px) {
+        .header-content {
+            flex-direction: column;
+            gap: 24px;
+            text-align: center;
+        }
+        
+        .header-stats {
+            min-width: auto;
+            width: 100%;
+        }
+        
+        .controls-row {
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+        
+        .bill-header {
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .bill-amount {
+            text-align: left;
+        }
+        
+        .bill-details {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .bill-actions {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">Dashboard</a></li>
+<li class="breadcrumb-item active">Billing</li>
+{% endblock %}
+
+{% block content %}
+<div class="billing-content">
+    <!-- Header Section -->
+    <div class="billing-header">
+        <div class="header-content">
+            <div class="header-info">
+                <h1 class="header-title">Billing Management</h1>
+                <p class="header-subtitle">Comprehensive financial management and invoice tracking</p>
+            </div>
+            <div class="header-stats">
+                <div class="header-stat">
+                    <div class="stat-value">${{ total_revenue|default:0 }}</div>
+                    <div class="stat-label">Total Revenue</div>
+                </div>
+                <div class="header-stat">
+                    <div class="stat-value">${{ outstanding_amount|default:0 }}</div>
+                    <div class="stat-label">Outstanding</div>
+                </div>
+                <div class="header-stat">
+                    <div class="stat-value">{{ total_bills|default:0 }}</div>
+                    <div class="stat-label">Total Bills</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Controls Section -->
+    <div class="billing-controls">
+        <form method="GET" id="filterForm">
+            <div class="controls-row">
+                <div class="form-group">
+                    <label class="form-label">Search Bills</label>
+                    <input type="text" name="search" class="form-control" 
+                           placeholder="Search by bill number, patient name, or amount..." 
+                           value="{{ request.GET.search }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-control">
+                        <option value="">All Statuses</option>
+                        <option value="DRAFT" {% if request.GET.status == 'DRAFT' %}selected{% endif %}>Draft</option>
+                        <option value="SENT" {% if request.GET.status == 'SENT' %}selected{% endif %}>Sent</option>
+                        <option value="PAID" {% if request.GET.status == 'PAID' %}selected{% endif %}>Paid</option>
+                        <option value="OVERDUE" {% if request.GET.status == 'OVERDUE' %}selected{% endif %}>Overdue</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date Range</label>
+                    <select name="date_range" class="form-control">
+                        <option value="">All Time</option>
+                        <option value="today" {% if request.GET.date_range == 'today' %}selected{% endif %}>Today</option>
+                        <option value="week" {% if request.GET.date_range == 'week' %}selected{% endif %}>This Week</option>
+                        <option value="month" {% if request.GET.date_range == 'month' %}selected{% endif %}>This Month</option>
+                        <option value="quarter" {% if request.GET.date_range == 'quarter' %}selected{% endif %}>This Quarter</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Amount Range</label>
+                    <select name="amount_range" class="form-control">
+                        <option value="">All Amounts</option>
+                        <option value="0-100" {% if request.GET.amount_range == '0-100' %}selected{% endif %}>$0 - $100</option>
+                        <option value="100-500" {% if request.GET.amount_range == '100-500' %}selected{% endif %}>$100 - $500</option>
+                        <option value="500-1000" {% if request.GET.amount_range == '500-1000' %}selected{% endif %}>$500 - $1000</option>
+                        <option value="1000+" {% if request.GET.amount_range == '1000+' %}selected{% endif %}>$1000+</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search"></i> Filter
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Bills Grid -->
+    <div class="bills-grid">
+        {% for bill in bills %}
+        <div class="bill-card status-{{ bill.status|lower }}">
+            <div class="bill-header">
+                <div class="bill-info">
+                    <div class="bill-number">{{ bill.bill_number }}</div>
+                    <div class="bill-patient">
+                        <i class="bi bi-person"></i>
+                        {{ bill.patient.full_name }}
+                    </div>
+                    <div class="bill-date">
+                        <i class="bi bi-calendar"></i>
+                        {{ bill.created_at|date:"M d, Y" }}
+                    </div>
+                </div>
+                <div class="bill-amount">
+                    <div class="amount-total">${{ bill.total_amount }}</div>
+                    <div class="amount-status status-{{ bill.status|lower }}">
+                        {{ bill.get_status_display }}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bill-details">
+                <div class="detail-item">
+                    <div class="detail-value">${{ bill.subtotal }}</div>
+                    <div class="detail-label">Subtotal</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-value">${{ bill.tax_amount|default:0 }}</div>
+                    <div class="detail-label">Tax</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-value">${{ bill.paid_amount|default:0 }}</div>
+                    <div class="detail-label">Paid</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-value">${{ bill.balance_due }}</div>
+                    <div class="detail-label">Balance</div>
+                </div>
+            </div>
+            
+            <div class="bill-actions">
+                <a href="{% url 'billing:bill_detail' bill.pk %}" class="btn-action btn-primary-action">
+                    <i class="bi bi-eye"></i> View
+                </a>
+                <a href="{% url 'billing:bill_update' bill.pk %}" class="btn-action btn-secondary-action">
+                    <i class="bi bi-pencil"></i> Edit
+                </a>
+                {% if bill.status != 'PAID' %}
+                <a href="#" class="btn-action btn-success-action" onclick="recordPayment('{{ bill.pk }}')"></a>
+                    <i class="bi bi-credit-card"></i> Pay
+                </a>
+                {% endif %}
+                <a href="#" class="btn-action btn-secondary-action" onclick="downloadPDF('{{ bill.pk }}')"></a>
+                    <i class="bi bi-download"></i> PDF
+                </a>
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="bi bi-receipt"></i>
+            </div>
+            <h3 class="empty-title">No bills found</h3>
+            <p class="empty-description">Try adjusting your search criteria or create a new bill.</p>
+            <a href="{% url 'billing:bill_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-lg"></i> Create First Bill
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="pagination-container">
+        <nav>
+            <ul class="pagination">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                            <i class="bi bi-chevron-double-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                            <i class="bi bi-chevron-double-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function recordPayment(billId) {
+    // Implementation for recording payment
+    PremiumHMS.showNotification('Payment recording feature coming soon!', 'info');
+}
+
+function downloadPDF(billId) {
+    // Implementation for PDF download
+    PremiumHMS.showNotification('PDF download feature coming soon!', 'info');
+}
+
+// Auto-submit filter form on change
+document.getElementById('filterForm').addEventListener('change', function(e) {
+    if (e.target.name !== 'search') {
+        this.submit();
+    }
+});
+
+// Auto-submit search form on input with debounce
+document.querySelector('[name="search"]').addEventListener('input', function() {
+    clearTimeout(this.searchTimeout);
+    this.searchTimeout = setTimeout(() => {
+        document.getElementById('filterForm').submit();
+    }, 500);
+});
+</script>
+{% endblock %}

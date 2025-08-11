@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Reports - Premium HMS{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'hospital_analytics:dashboard' %}">Analytics</a></li>
+<li class="breadcrumb-item active">Reports</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card premium-card">
+                <div class="card-header">
+                    <h4 class="card-title">
+                        <i class="bi bi-file-earmark-text me-2"></i>Reports
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <p>Reports functionality coming soon...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

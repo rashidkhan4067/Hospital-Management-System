@@ -1,0 +1,322 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Billing Reports - Premium HMS{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'billing:bill_list' %}">Billing</a></li>
+<li class="breadcrumb-item active">Reports</li>
+{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'billing:bill_list' %}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i> Back to Bills
+</a>
+<button class="btn btn-primary" onclick="window.print()">
+    <i class="bi bi-printer"></i> Print Report
+</button>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <!-- Summary Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="premium-card text-center">
+                    <div class="card-body">
+                        <div class="display-6 text-primary mb-2">${{ total_revenue|floatformat:2 }}</div>
+                        <h6 class="card-title text-muted">Total Revenue</h6>
+                        <small class="text-muted">Last 30 days</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="premium-card text-center">
+                    <div class="card-body">
+                        <div class="display-6 text-success mb-2">${{ total_paid|floatformat:2 }}</div>
+                        <h6 class="card-title text-muted">Total Collected</h6>
+                        <small class="text-muted">Payments received</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="premium-card text-center">
+                    <div class="card-body">
+                        <div class="display-6 text-warning mb-2">${{ total_pending|floatformat:2 }}</div>
+                        <h6 class="card-title text-muted">Outstanding</h6>
+                        <small class="text-muted">Pending payments</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="premium-card text-center">
+                    <div class="card-body">
+                        <div class="display-6 text-info mb-2">{{ recent_bills|length }}</div>
+                        <h6 class="card-title text-muted">Recent Bills</h6>
+                        <small class="text-muted">Last 30 days</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Revenue Chart -->
+        <div class="premium-card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-graph-up text-primary me-2"></i>
+                    Revenue Trend (Last 30 Days)
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="revenueChart" height="100"></canvas>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Recent Bills -->
+            <div class="col-lg-8">
+                <div class="premium-card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-receipt text-primary me-2"></i>
+                            Recent Bills
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if recent_bills %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Bill #</th>
+                                        <th>Patient</th>
+                                        <th>Date</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for bill in recent_bills %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'billing:bill_detail' bill.pk %}" class="text-decoration-none">
+                                                {{ bill.bill_number }}
+                                            </a>
+                                        </td>
+                                        <td>{{ bill.patient.full_name }}</td>
+                                        <td>{{ bill.created_at|date:"M d, Y" }}</td>
+                                        <td>${{ bill.total_amount }}</td>
+                                        <td>
+                                            <span class="badge 
+                                                {% if bill.status == 'PAID' %}bg-success
+                                                {% elif bill.status == 'PENDING' %}bg-warning
+                                                {% elif bill.status == 'OVERDUE' %}bg-danger
+                                                {% else %}bg-secondary{% endif %}">
+                                                {{ bill.get_status_display }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-receipt display-1 text-muted"></i>
+                            <h5 class="text-muted mt-3">No Recent Bills</h5>
+                            <p class="text-muted">No bills have been created in the last 30 days.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Status Breakdown -->
+            <div class="col-lg-4">
+                <div class="premium-card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-pie-chart text-primary me-2"></i>
+                            Payment Status
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="statusChart" height="200"></canvas>
+                        <div class="mt-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="d-flex align-items-center">
+                                    <span class="badge bg-success me-2">&nbsp;</span>
+                                    Paid
+                                </span>
+                                <span class="fw-bold">${{ total_paid|floatformat:2 }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="d-flex align-items-center">
+                                    <span class="badge bg-warning me-2">&nbsp;</span>
+                                    Pending
+                                </span>
+                                <span class="fw-bold">${{ total_pending|floatformat:2 }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="d-flex align-items-center">
+                                    <span class="badge bg-primary me-2">&nbsp;</span>
+                                    Total
+                                </span>
+                                <span class="fw-bold">${{ total_revenue|floatformat:2 }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Daily Revenue Table -->
+        <div class="premium-card mt-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-calendar3 text-primary me-2"></i>
+                    Daily Revenue Breakdown
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Total Billed</th>
+                                <th>Payments Received</th>
+                                <th>Outstanding</th>
+                                <th>Collection Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for day in monthly_data|slice:":10" %}
+                            <tr>
+                                <td>{{ day.date|date:"M d, Y" }}</td>
+                                <td>${{ day.total|floatformat:2 }}</td>
+                                <td>${{ day.paid|floatformat:2 }}</td>
+                                <td>${{ day.pending|floatformat:2 }}</td>
+                                <td>
+                                    {% if day.total > 0 %}
+                                        {% widthratio day.paid day.total 100 %}%
+                                    {% else %}
+                                        0%
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Revenue Chart
+    const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+    const revenueData = [
+        {% for day in monthly_data|slice:":30" reversed %}
+        {
+            x: '{{ day.date|date:"Y-m-d" }}',
+            y: {{ day.total|default:0 }}
+        },
+        {% endfor %}
+    ];
+    
+    new Chart(revenueCtx, {
+        type: 'line',
+        data: {
+            datasets: [{
+                label: 'Daily Revenue',
+                data: revenueData,
+                borderColor: '#007bff',
+                backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    type: 'time',
+                    time: {
+                        unit: 'day',
+                        displayFormats: {
+                            day: 'MMM DD'
+                        }
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value.toFixed(2);
+                        }
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return 'Revenue: $' + context.parsed.y.toFixed(2);
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    // Status Chart
+    const statusCtx = document.getElementById('statusChart').getContext('2d');
+    new Chart(statusCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Paid', 'Pending'],
+            datasets: [{
+                data: [{{ total_paid|default:0 }}, {{ total_pending|default:0 }}],
+                backgroundColor: ['#28a745', '#ffc107'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.label + ': $' + context.parsed.toFixed(2);
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+
+<style>
+@media print {
+    .btn, .breadcrumb, .card-header .bi {
+        display: none !important;
+    }
+    
+    .premium-card {
+        border: 1px solid #ddd !important;
+        box-shadow: none !important;
+    }
+}
+</style>
+{% endblock %}

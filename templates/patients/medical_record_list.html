@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Medical Records - {{ patient.full_name }} - Premium HMS{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'patients:patient_list' %}">Patients</a></li>
+<li class="breadcrumb-item"><a href="{% url 'patients:patient_detail' patient.pk %}">{{ patient.full_name }}</a></li>
+<li class="breadcrumb-item active">Medical Records</li>
+{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'patients:patient_detail' patient.pk %}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i> Back to Patient
+</a>
+<a href="{% url 'patients:medical_record_create' patient.pk %}" class="btn btn-primary">
+    <i class="bi bi-plus-circle"></i> Add Medical Record
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <!-- Patient Info Card -->
+        <div class="premium-card mb-4">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="avatar-wrapper me-3">
+                        <div class="avatar bg-primary text-white">
+                            {{ patient.user.first_name.0 }}{{ patient.user.last_name.0 }}
+                        </div>
+                    </div>
+                    <div>
+                        <h5 class="mb-1">{{ patient.full_name }}</h5>
+                        <p class="text-muted mb-0">
+                            Patient ID: {{ patient.patient_id }} | 
+                            {% if patient.age %}Age: {{ patient.age }} years{% endif %}
+                            {% if patient.blood_group %} | Blood Group: {{ patient.blood_group }}{% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Medical Records -->
+        <div class="premium-card">
+            <div class="card-header">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h4 class="card-title mb-0">
+                            <i class="bi bi-file-medical text-primary me-2"></i>
+                            Medical Records
+                        </h4>
+                        <p class="card-subtitle text-muted mb-0">Complete medical history and records</p>
+                    </div>
+                    <span class="badge bg-primary">{{ records|length }} Record{{ records|length|pluralize }}</span>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if records %}
+                    <div class="medical-records-timeline">
+                        {% for record in records %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker">
+                                <i class="bi bi-circle-fill text-primary"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <div class="record-card">
+                                    <div class="record-header">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="record-title">{{ record.diagnosis|truncatechars:50 }}</h6>
+                                                <p class="record-meta text-muted mb-0">
+                                                    <i class="bi bi-person-badge me-1"></i>
+                                                    Dr. {{ record.doctor.user.get_full_name }}
+                                                    <span class="mx-2">•</span>
+                                                    <i class="bi bi-calendar me-1"></i>
+                                                    {{ record.visit_date|date:"M d, Y" }}
+                                                </p>
+                                            </div>
+                                            <span class="badge bg-light text-dark">
+                                                {{ record.visit_date|date:"H:i" }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="record-body">
+                                        {% if record.diagnosis %}
+                                        <div class="mb-2">
+                                            <strong>Diagnosis:</strong>
+                                            <p class="mb-1">{{ record.diagnosis }}</p>
+                                        </div>
+                                        {% endif %}
+                                        
+                                        {% if record.treatment %}
+                                        <div class="mb-2">
+                                            <strong>Treatment:</strong>
+                                            <p class="mb-1">{{ record.treatment }}</p>
+                                        </div>
+                                        {% endif %}
+                                        
+                                        {% if record.prescription %}
+                                        <div class="mb-2">
+                                            <strong>Prescription:</strong>
+                                            <p class="mb-1">{{ record.prescription }}</p>
+                                        </div>
+                                        {% endif %}
+                                        
+                                        {% if record.notes %}
+                                        <div class="mb-2">
+                                            <strong>Notes:</strong>
+                                            <p class="mb-1">{{ record.notes }}</p>
+                                        </div>
+                                        {% endif %}
+                                        
+                                        {% if record.next_appointment %}
+                                        <div class="alert alert-info mb-0">
+                                            <i class="bi bi-calendar-check me-1"></i>
+                                            Next appointment scheduled for {{ record.next_appointment|date:"M d, Y" }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Pagination -->
+                    {% if is_paginated %}
+                    <nav aria-label="Medical records pagination" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1">First</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                                </li>
+                            {% endif %}
+                            
+                            <li class="page-item active">
+                                <span class="page-link">
+                                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                                </span>
+                            </li>
+                            
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                {% else %}
+                    <div class="empty-state text-center py-5">
+                        <i class="bi bi-file-medical display-1 text-muted mb-3"></i>
+                        <h5 class="text-muted">No Medical Records</h5>
+                        <p class="text-muted mb-4">This patient doesn't have any medical records yet.</p>
+                        <a href="{% url 'patients:medical_record_create' patient.pk %}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Add First Medical Record
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.medical-records-timeline {
+    position: relative;
+    padding-left: 2rem;
+}
+
+.medical-records-timeline::before {
+    content: '';
+    position: absolute;
+    left: 0.5rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #e9ecef;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 2rem;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -2rem;
+    top: 0.5rem;
+    width: 1rem;
+    height: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+}
+
+.timeline-content {
+    margin-left: 1rem;
+}
+
+.record-card {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 0.5rem;
+    padding: 1rem;
+}
+
+.record-title {
+    color: #495057;
+    margin-bottom: 0.25rem;
+}
+
+.record-meta {
+    font-size: 0.875rem;
+}
+
+.avatar-wrapper .avatar {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 1.25rem;
+}
+</style>
+{% endblock %}

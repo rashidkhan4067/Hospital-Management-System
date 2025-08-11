@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Search Patients - Premium HMS{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'patients:patient_list' %}">Patients</a></li>
+<li class="breadcrumb-item active">Search</li>
+{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'patients:patient_list' %}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i> Back to Patients
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="premium-card">
+            <div class="card-header">
+                <div class="d-flex align-items-center">
+                    <div class="icon-wrapper me-3">
+                        <i class="bi bi-search text-primary"></i>
+                    </div>
+                    <div>
+                        <h4 class="card-title mb-0">Search Patients</h4>
+                        <p class="card-subtitle text-muted mb-0">Find patients by name, ID, email, or phone</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Search Form -->
+                <form method="get" class="mb-4">
+                    <div class="input-group">
+                        <input type="text" 
+                               name="q" 
+                               class="form-control form-control-lg" 
+                               placeholder="Search by name, patient ID, email, or phone..." 
+                               value="{{ query }}"
+                               autocomplete="off">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="bi bi-search"></i> Search
+                        </button>
+                    </div>
+                    <small class="form-text text-muted mt-2">
+                        Enter at least 2 characters to search. You can search by first name, last name, patient ID, email, or phone number.
+                    </small>
+                </form>
+
+                <!-- Search Results -->
+                {% if query %}
+                    <div class="search-results">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">Search Results</h5>
+                            <span class="badge bg-primary">{{ patients|length }} result{{ patients|length|pluralize }}</span>
+                        </div>
+
+                        {% if patients %}
+                            <div class="list-group">
+                                {% for patient in patients %}
+                                <a href="{% url 'patients:patient_detail' patient.pk %}" class="list-group-item list-group-item-action">
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-wrapper me-3">
+                                            <div class="avatar bg-primary text-white">
+                                                {{ patient.user.first_name.0 }}{{ patient.user.last_name.0 }}
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h6 class="mb-1">{{ patient.full_name }}</h6>
+                                                    <p class="mb-1 text-muted">
+                                                        <i class="bi bi-card-text me-1"></i>{{ patient.patient_id }}
+                                                        {% if patient.age %}
+                                                            <span class="mx-2">•</span>
+                                                            <i class="bi bi-calendar me-1"></i>{{ patient.age }} years
+                                                        {% endif %}
+                                                        {% if patient.blood_group %}
+                                                            <span class="mx-2">•</span>
+                                                            <i class="bi bi-droplet me-1"></i>{{ patient.blood_group }}
+                                                        {% endif %}
+                                                    </p>
+                                                    <small class="text-muted">
+                                                        <i class="bi bi-envelope me-1"></i>{{ patient.email }}
+                                                        {% if patient.phone %}
+                                                            <span class="mx-2">•</span>
+                                                            <i class="bi bi-telephone me-1"></i>{{ patient.phone }}
+                                                        {% endif %}
+                                                    </small>
+                                                </div>
+                                                <div class="text-end">
+                                                    <span class="badge bg-success">Active</span>
+                                                    <small class="d-block text-muted mt-1">
+                                                        Joined {{ patient.created_at|date:"M Y" }}
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="empty-state text-center py-5">
+                                <i class="bi bi-search display-1 text-muted mb-3"></i>
+                                <h5 class="text-muted">No Patients Found</h5>
+                                <p class="text-muted mb-4">
+                                    No patients match your search criteria "{{ query }}".
+                                    <br>Try searching with different keywords.
+                                </p>
+                                <a href="{% url 'patients:patient_create' %}" class="btn btn-primary">
+                                    <i class="bi bi-plus-circle"></i> Add New Patient
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="search-placeholder text-center py-5">
+                        <i class="bi bi-search display-1 text-muted mb-3"></i>
+                        <h5 class="text-muted">Search for Patients</h5>
+                        <p class="text-muted mb-4">
+                            Enter a search term above to find patients in the system.
+                            <br>You can search by name, patient ID, email, or phone number.
+                        </p>
+                        <div class="search-tips">
+                            <h6 class="text-muted mb-2">Search Tips:</h6>
+                            <ul class="list-unstyled text-muted small">
+                                <li><i class="bi bi-check-circle text-success me-1"></i> Use partial names (e.g., "John" will find "John Smith")</li>
+                                <li><i class="bi bi-check-circle text-success me-1"></i> Search by patient ID (e.g., "P123456")</li>
+                                <li><i class="bi bi-check-circle text-success me-1"></i> Use email addresses for exact matches</li>
+                                <li><i class="bi bi-check-circle text-success me-1"></i> Phone numbers can be searched with or without formatting</li>
+                            </ul>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.avatar-wrapper .avatar {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.list-group-item {
+    border: 1px solid #e9ecef;
+    margin-bottom: 0.5rem;
+    border-radius: 0.5rem !important;
+    transition: all 0.2s ease;
+}
+
+.list-group-item:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.search-tips {
+    background: #f8f9fa;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-top: 1rem;
+    text-align: left;
+    display: inline-block;
+}
+
+.input-group .form-control:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-focus search input
+    const searchInput = document.querySelector('input[name="q"]');
+    if (searchInput && !searchInput.value) {
+        searchInput.focus();
+    }
+    
+    // Submit form on Enter
+    searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.target.closest('form').submit();
+        }
+    });
+});
+</script>
+{% endblock %}

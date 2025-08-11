@@ -1,0 +1,677 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if doctor %}Edit Dr. {{ doctor.user.get_full_name }}{% else %}Add New Doctor{% endif %} - Premium HMS{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 24px;
+        padding: 40px;
+        margin-bottom: 32px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .form-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        opacity: 0.3;
+    }
+    
+    .header-content {
+        position: relative;
+        z-index: 1;
+        text-align: center;
+    }
+    
+    .header-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+        background: linear-gradient(45deg, #ffffff, #e0e7ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .header-subtitle {
+        font-size: 1.1rem;
+        opacity: 0.9;
+    }
+    
+    .form-container {
+        background: linear-gradient(145deg, #ffffff, #f8fafc);
+        border-radius: 24px;
+        padding: 40px;
+        box-shadow: 
+            0 20px 60px rgba(0, 0, 0, 0.1),
+            0 8px 30px rgba(0, 0, 0, 0.05),
+            inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        margin-bottom: 32px;
+    }
+    
+    .form-section {
+        margin-bottom: 40px;
+    }
+    
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--gray-900);
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid var(--gray-100);
+    }
+    
+    .section-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, var(--success-500), var(--success-600));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 18px;
+        box-shadow: 0 4px 16px rgba(34, 197, 94, 0.3);
+    }
+    
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 24px;
+    }
+    
+    .form-group {
+        margin-bottom: 24px;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: var(--gray-700);
+        margin-bottom: 8px;
+        font-size: 14px;
+        display: block;
+    }
+    
+    .form-label.required::after {
+        content: ' *';
+        color: var(--danger-500);
+    }
+    
+    .form-control {
+        border: 2px solid var(--gray-200);
+        border-radius: 12px;
+        padding: 14px 16px;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        background: white;
+        width: 100%;
+        font-family: inherit;
+    }
+    
+    .form-control:focus {
+        border-color: var(--success-500);
+        box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+        outline: none;
+        transform: translateY(-1px);
+    }
+    
+    .form-control.is-invalid {
+        border-color: var(--danger-500);
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    }
+    
+    .form-control.is-valid {
+        border-color: var(--success-500);
+        box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+    }
+    
+    .form-text {
+        font-size: 12px;
+        color: var(--gray-500);
+        margin-top: 4px;
+    }
+    
+    .invalid-feedback {
+        font-size: 12px;
+        color: var(--danger-600);
+        margin-top: 4px;
+        display: block;
+    }
+    
+    .valid-feedback {
+        font-size: 12px;
+        color: var(--success-600);
+        margin-top: 4px;
+        display: block;
+    }
+    
+    .file-upload-area {
+        border: 2px dashed var(--gray-300);
+        border-radius: 12px;
+        padding: 40px 20px;
+        text-align: center;
+        background: var(--gray-50);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .file-upload-area:hover {
+        border-color: var(--success-400);
+        background: var(--success-50);
+    }
+    
+    .file-upload-area.dragover {
+        border-color: var(--success-500);
+        background: var(--success-100);
+        transform: scale(1.02);
+    }
+    
+    .upload-icon {
+        font-size: 48px;
+        color: var(--gray-400);
+        margin-bottom: 16px;
+    }
+    
+    .upload-text {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--gray-700);
+        margin-bottom: 8px;
+    }
+    
+    .upload-hint {
+        font-size: 14px;
+        color: var(--gray-500);
+    }
+    
+    .file-input {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+    }
+    
+    .preview-container {
+        margin-top: 16px;
+        display: none;
+    }
+    
+    .preview-image {
+        width: 120px;
+        height: 120px;
+        border-radius: 12px;
+        object-fit: cover;
+        border: 2px solid var(--gray-200);
+    }
+    
+    .checkbox-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    
+    .checkbox-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 16px;
+        background: white;
+        border: 2px solid var(--gray-200);
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        min-width: 150px;
+    }
+    
+    .checkbox-item:hover {
+        border-color: var(--success-300);
+        background: var(--success-50);
+    }
+    
+    .checkbox-item.checked {
+        border-color: var(--success-500);
+        background: var(--success-50);
+    }
+    
+    .checkbox-item input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--success-500);
+    }
+    
+    .checkbox-label {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--gray-700);
+        cursor: pointer;
+    }
+    
+    .form-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 40px;
+        padding-top: 24px;
+        border-top: 2px solid var(--gray-100);
+    }
+    
+    .btn-form {
+        padding: 14px 28px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+    
+    .btn-primary-form {
+        background: linear-gradient(135deg, var(--success-500), var(--success-600));
+        color: white;
+        box-shadow: 0 4px 16px rgba(34, 197, 94, 0.3);
+    }
+    
+    .btn-primary-form:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 32px rgba(34, 197, 94, 0.4);
+        color: white;
+    }
+    
+    .btn-secondary-form {
+        background: var(--gray-100);
+        color: var(--gray-700);
+        border: 2px solid var(--gray-200);
+    }
+    
+    .btn-secondary-form:hover {
+        background: var(--gray-200);
+        transform: translateY(-1px);
+        color: var(--gray-700);
+    }
+    
+    .btn-danger-form {
+        background: linear-gradient(135deg, var(--danger-500), var(--danger-600));
+        color: white;
+        box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
+    }
+    
+    .btn-danger-form:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 32px rgba(239, 68, 68, 0.4);
+        color: white;
+    }
+    
+    .auto-save-indicator {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--gray-500);
+        font-size: 14px;
+    }
+    
+    .auto-save-indicator.saving {
+        color: var(--warning-600);
+    }
+    
+    .auto-save-indicator.saved {
+        color: var(--success-600);
+    }
+    
+    @media (max-width: 768px) {
+        .form-container {
+            padding: 24px;
+        }
+        
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .btn-form {
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .header-title {
+            font-size: 2rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">Dashboard</a></li>
+<li class="breadcrumb-item"><a href="{% url 'doctors:doctor_list' %}">Medical Staff</a></li>
+<li class="breadcrumb-item active">{% if doctor %}Edit Doctor{% else %}Add Doctor{% endif %}</li>
+{% endblock %}
+
+{% block content %}
+<div class="doctor-form-content">
+    <!-- Header -->
+    <div class="form-header">
+        <div class="header-content">
+            <h1 class="header-title">
+                {% if doctor %}Edit Doctor Profile{% else %}Add New Doctor{% endif %}
+            </h1>
+            <p class="header-subtitle">
+                {% if doctor %}Update doctor information and credentials{% else %}Register a new medical professional{% endif %}
+            </p>
+        </div>
+    </div>
+    
+    <!-- Form Container -->
+    <div class="form-container">
+        <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate data-auto-save>
+            {% csrf_token %}
+            
+            <!-- Personal Information Section -->
+            <div class="form-section">
+                <h2 class="section-title">
+                    <div class="section-icon">
+                        <i class="bi bi-person"></i>
+                    </div>
+                    Personal Information
+                </h2>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="id_first_name" class="form-label required">First Name</label>
+                        <input type="text" name="first_name" id="id_first_name" class="form-control" 
+                               value="{{ form.first_name.value|default:'' }}" required>
+                        <div class="invalid-feedback">Please provide a valid first name.</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_last_name" class="form-label required">Last Name</label>
+                        <input type="text" name="last_name" id="id_last_name" class="form-control" 
+                               value="{{ form.last_name.value|default:'' }}" required>
+                        <div class="invalid-feedback">Please provide a valid last name.</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_email" class="form-label required">Email Address</label>
+                        <input type="email" name="email" id="id_email" class="form-control" 
+                               value="{{ form.email.value|default:'' }}" required>
+                        <div class="invalid-feedback">Please provide a valid email address.</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_phone_number" class="form-label">Phone Number</label>
+                        <input type="tel" name="phone_number" id="id_phone_number" class="form-control" 
+                               value="{{ form.phone_number.value|default:'' }}">
+                        <div class="form-text">Include country code (e.g., +1 555-123-4567)</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_birth_date" class="form-label">Date of Birth</label>
+                        <input type="date" name="birth_date" id="id_birth_date" class="form-control" 
+                               value="{{ form.birth_date.value|default:'' }}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_gender" class="form-label">Gender</label>
+                        <select name="gender" id="id_gender" class="form-control">
+                            <option value="">Select Gender</option>
+                            <option value="M" {% if form.gender.value == 'M' %}selected{% endif %}>Male</option>
+                            <option value="F" {% if form.gender.value == 'F' %}selected{% endif %}>Female</option>
+                            <option value="O" {% if form.gender.value == 'O' %}selected{% endif %}>Other</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="id_address" class="form-label">Address</label>
+                    <textarea name="address" id="id_address" class="form-control" rows="3" 
+                              placeholder="Enter complete address">{{ form.address.value|default:'' }}</textarea>
+                </div>
+            </div>
+            
+            <!-- Professional Information Section -->
+            <div class="form-section">
+                <h2 class="section-title">
+                    <div class="section-icon">
+                        <i class="bi bi-person-badge"></i>
+                    </div>
+                    Professional Information
+                </h2>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="id_specialization" class="form-label required">Specialization</label>
+                        <select name="specialization" id="id_specialization" class="form-control" required>
+                            <option value="">Select Specialization</option>
+                            <option value="Cardiology" {% if form.specialization.value == 'Cardiology' %}selected{% endif %}>Cardiology</option>
+                            <option value="Neurology" {% if form.specialization.value == 'Neurology' %}selected{% endif %}>Neurology</option>
+                            <option value="Orthopedics" {% if form.specialization.value == 'Orthopedics' %}selected{% endif %}>Orthopedics</option>
+                            <option value="Pediatrics" {% if form.specialization.value == 'Pediatrics' %}selected{% endif %}>Pediatrics</option>
+                            <option value="Dermatology" {% if form.specialization.value == 'Dermatology' %}selected{% endif %}>Dermatology</option>
+                            <option value="Psychiatry" {% if form.specialization.value == 'Psychiatry' %}selected{% endif %}>Psychiatry</option>
+                            <option value="General Medicine" {% if form.specialization.value == 'General Medicine' %}selected{% endif %}>General Medicine</option>
+                        </select>
+                        <div class="invalid-feedback">Please select a specialization.</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_department" class="form-label required">Department</label>
+                        <select name="department" id="id_department" class="form-control" required>
+                            <option value="">Select Department</option>
+                            {% for dept in departments %}
+                            <option value="{{ dept.pk }}" {% if form.department.value == dept.pk %}selected{% endif %}>
+                                {{ dept.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <div class="invalid-feedback">Please select a department.</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_license_number" class="form-label">License Number</label>
+                        <input type="text" name="license_number" id="id_license_number" class="form-control" 
+                               value="{{ form.license_number.value|default:'' }}" 
+                               placeholder="Medical license number">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_experience_years" class="form-label required">Years of Experience</label>
+                        <input type="number" name="experience_years" id="id_experience_years" class="form-control" 
+                               value="{{ form.experience_years.value|default:'' }}" min="0" max="50" required>
+                        <div class="invalid-feedback">Please provide years of experience.</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_consultation_fee" class="form-label required">Consultation Fee ($)</label>
+                        <input type="number" name="consultation_fee" id="id_consultation_fee" class="form-control" 
+                               value="{{ form.consultation_fee.value|default:'' }}" min="0" step="0.01" required>
+                        <div class="invalid-feedback">Please provide consultation fee.</div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="id_education" class="form-label">Education & Qualifications</label>
+                    <textarea name="education" id="id_education" class="form-control" rows="4" 
+                              placeholder="List education, degrees, certifications, and qualifications">{{ form.education.value|default:'' }}</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="id_bio" class="form-label">Professional Bio</label>
+                    <textarea name="bio" id="id_bio" class="form-control" rows="4" 
+                              placeholder="Brief professional biography and experience summary">{{ form.bio.value|default:'' }}</textarea>
+                </div>
+            </div>
+            
+            <!-- Profile Picture Section -->
+            <div class="form-section">
+                <h2 class="section-title">
+                    <div class="section-icon">
+                        <i class="bi bi-camera"></i>
+                    </div>
+                    Profile Picture
+                </h2>
+                
+                <div class="form-group">
+                    <div class="file-upload-area" id="fileUploadArea">
+                        <div class="upload-icon">
+                            <i class="bi bi-cloud-upload"></i>
+                        </div>
+                        <div class="upload-text">Click to upload or drag and drop</div>
+                        <div class="upload-hint">PNG, JPG or JPEG (max. 5MB)</div>
+                        <input type="file" name="profile_picture" id="id_profile_picture" class="file-input" 
+                               accept="image/*">
+                    </div>
+                    <div class="preview-container" id="previewContainer">
+                        <img id="previewImage" class="preview-image" alt="Preview">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Form Actions -->
+            <div class="form-actions">
+                <div class="auto-save-indicator" id="autoSaveIndicator">
+                    <i class="bi bi-check-circle"></i>
+                    <span>All changes saved</span>
+                </div>
+                
+                <div class="action-buttons">
+                    <a href="{% url 'doctors:doctor_list' %}" class="btn-form btn-secondary-form">
+                        <i class="bi bi-x-lg"></i> Cancel
+                    </a>
+                    
+                    {% if doctor %}
+                    <button type="button" class="btn-form btn-danger-form" onclick="confirmDelete()">
+                        <i class="bi bi-trash"></i> Delete Doctor
+                    </button>
+                    {% endif %}
+                    
+                    <button type="submit" class="btn-form btn-primary-form">
+                        <i class="bi bi-check-lg"></i> 
+                        {% if doctor %}Update Doctor{% else %}Add Doctor{% endif %}
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// File upload handling
+document.getElementById('fileUploadArea').addEventListener('click', function() {
+    document.getElementById('id_profile_picture').click();
+});
+
+document.getElementById('id_profile_picture').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const previewContainer = document.getElementById('previewContainer');
+            const previewImage = document.getElementById('previewImage');
+            previewImage.src = e.target.result;
+            previewContainer.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+// Drag and drop functionality
+const fileUploadArea = document.getElementById('fileUploadArea');
+
+fileUploadArea.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    this.classList.add('dragover');
+});
+
+fileUploadArea.addEventListener('dragleave', function(e) {
+    e.preventDefault();
+    this.classList.remove('dragover');
+});
+
+fileUploadArea.addEventListener('drop', function(e) {
+    e.preventDefault();
+    this.classList.remove('dragover');
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        document.getElementById('id_profile_picture').files = files;
+        document.getElementById('id_profile_picture').dispatchEvent(new Event('change'));
+    }
+});
+
+// Form validation
+document.querySelector('.needs-validation').addEventListener('submit', function(e) {
+    if (!this.checkValidity()) {
+        e.preventDefault();
+        e.stopPropagation();
+        PremiumHMS.showNotification('Please fill in all required fields correctly', 'warning');
+    }
+    this.classList.add('was-validated');
+});
+
+// Auto-save functionality
+let autoSaveTimeout;
+const autoSaveIndicator = document.getElementById('autoSaveIndicator');
+
+document.querySelectorAll('input, textarea, select').forEach(input => {
+    input.addEventListener('input', function() {
+        clearTimeout(autoSaveTimeout);
+        autoSaveIndicator.className = 'auto-save-indicator saving';
+        autoSaveIndicator.innerHTML = '<i class="bi bi-clock"></i><span>Saving...</span>';
+        
+        autoSaveTimeout = setTimeout(() => {
+            // Simulate auto-save
+            autoSaveIndicator.className = 'auto-save-indicator saved';
+            autoSaveIndicator.innerHTML = '<i class="bi bi-check-circle"></i><span>All changes saved</span>';
+        }, 2000);
+    });
+});
+
+// Delete confirmation
+function confirmDelete() {
+    if (confirm('Are you sure you want to delete this doctor? This action cannot be undone.')) {
+        // Implement delete functionality
+        PremiumHMS.showNotification('Delete functionality would be implemented here', 'info');
+    }
+}
+
+// Real-time validation
+document.querySelectorAll('input[required], select[required]').forEach(input => {
+    input.addEventListener('blur', function() {
+        if (this.checkValidity()) {
+            this.classList.remove('is-invalid');
+            this.classList.add('is-valid');
+        } else {
+            this.classList.remove('is-valid');
+            this.classList.add('is-invalid');
+        }
+    });
+});
+</script>
+{% endblock %}

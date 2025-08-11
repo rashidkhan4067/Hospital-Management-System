@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Notification Details - Premium HMS{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'alerts:notification_list' %}">Notifications</a></li>
+<li class="breadcrumb-item active">Notification Details</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card premium-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="card-title">
+                        <i class="bi bi-bell me-2"></i>Notification Details
+                    </h4>
+                    <div>
+                        <a href="{% url 'alerts:notification_list' %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>Back to List
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h5>{{ notification.title }}</h5>
+                            <p class="lead">{{ notification.message }}</p>
+                            
+                            <div class="mt-4">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Type:</strong> 
+                                            <span class="badge bg-{% if notification.notification_type == 'EMERGENCY' %}danger{% elif notification.notification_type == 'WARNING' %}warning{% elif notification.notification_type == 'SUCCESS' %}success{% else %}primary{% endif %}">
+                                                {{ notification.get_notification_type_display }}
+                                            </span>
+                                        </p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Priority:</strong> 
+                                            <span class="badge bg-{% if notification.priority == 'URGENT' %}danger{% elif notification.priority == 'HIGH' %}warning{% elif notification.priority == 'MEDIUM' %}info{% else %}secondary{% endif %}">
+                                                {{ notification.get_priority_display }}
+                                            </span>
+                                        </p>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Recipient:</strong> {{ notification.recipient.get_full_name }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Sender:</strong> {{ notification.sender.get_full_name|default:"System" }}</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Created:</strong> {{ notification.created_at|date:"F d, Y g:i A" }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Status:</strong> 
+                                            {% if notification.is_read %}
+                                                <span class="badge bg-success">Read</span>
+                                                <small class="text-muted">({{ notification.read_at|date:"F d, Y g:i A" }})</small>
+                                            {% else %}
+                                                <span class="badge bg-warning">Unread</span>
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-{% if notification.notification_type == 'EMERGENCY' %}exclamation-triangle{% elif notification.notification_type == 'WARNING' %}exclamation-circle{% elif notification.notification_type == 'SUCCESS' %}check-circle{% elif notification.notification_type == 'APPOINTMENT' %}calendar-event{% elif notification.notification_type == 'BILLING' %}receipt{% else %}info-circle{% endif %} display-1 text-{% if notification.notification_type == 'EMERGENCY' %}danger{% elif notification.notification_type == 'WARNING' %}warning{% elif notification.notification_type == 'SUCCESS' %}success{% else %}primary{% endif %}"></i>
+                                    <h6 class="mt-3">{{ notification.get_notification_type_display }}</h6>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

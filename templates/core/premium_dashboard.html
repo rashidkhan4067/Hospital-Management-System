@@ -1,0 +1,686 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Executive Dashboard - Premium HMS{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    .dashboard-hero {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 24px;
+        padding: 40px;
+        margin-bottom: 32px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .dashboard-hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        opacity: 0.3;
+    }
+    
+    .hero-content {
+        position: relative;
+        z-index: 1;
+    }
+    
+    .hero-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+        background: linear-gradient(45deg, #ffffff, #e0e7ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .hero-subtitle {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin-bottom: 24px;
+    }
+    
+    .hero-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 24px;
+    }
+    
+    .hero-stat {
+        text-align: center;
+    }
+    
+    .hero-stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+    
+    .hero-stat-label {
+        font-size: 0.9rem;
+        opacity: 0.8;
+    }
+    
+    .dashboard-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 24px;
+        margin-bottom: 32px;
+    }
+    
+    .stat-card {
+        background: linear-gradient(145deg, #ffffff, #f8fafc);
+        border-radius: 20px;
+        padding: 28px;
+        box-shadow: 
+            0 10px 40px rgba(0, 0, 0, 0.1),
+            0 4px 20px rgba(0, 0, 0, 0.05),
+            inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--primary-500), var(--primary-600));
+        border-radius: 20px 20px 0 0;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 
+            0 20px 60px rgba(0, 0, 0, 0.15),
+            0 8px 30px rgba(0, 0, 0, 0.1),
+            inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    }
+    
+    .stat-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+    }
+    
+    .stat-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-icon::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(45deg, rgba(255,255,255,0.2), transparent);
+        border-radius: 16px;
+    }
+    
+    .stat-icon.patients { 
+        background: linear-gradient(135deg, #3B82F6, #1D4ED8);
+        box-shadow: 0 8px 32px rgba(59, 130, 246, 0.3);
+    }
+    .stat-icon.doctors { 
+        background: linear-gradient(135deg, #10B981, #047857);
+        box-shadow: 0 8px 32px rgba(16, 185, 129, 0.3);
+    }
+    .stat-icon.appointments { 
+        background: linear-gradient(135deg, #F59E0B, #D97706);
+        box-shadow: 0 8px 32px rgba(245, 158, 11, 0.3);
+    }
+    .stat-icon.revenue {
+        background: linear-gradient(135deg, #8B5CF6, #7C3AED);
+        box-shadow: 0 8px 32px rgba(139, 92, 246, 0.3);
+    }
+    .stat-icon.records {
+        background: linear-gradient(135deg, #4facfe, #00f2fe);
+        box-shadow: 0 8px 32px rgba(79, 172, 254, 0.3);
+    }
+    
+    .stat-value {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: var(--gray-900);
+        margin-bottom: 8px;
+        background: linear-gradient(135deg, var(--gray-900), var(--gray-700));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .stat-label {
+        color: var(--gray-600);
+        font-size: 15px;
+        font-weight: 600;
+        margin-bottom: 12px;
+    }
+    
+    .stat-change {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        padding: 6px 12px;
+        border-radius: 20px;
+        width: fit-content;
+    }
+    
+    .stat-change.positive { 
+        color: var(--success-700);
+        background: var(--success-50);
+        border: 1px solid var(--success-200);
+    }
+    .stat-change.negative { 
+        color: var(--danger-700);
+        background: var(--danger-50);
+        border: 1px solid var(--danger-200);
+    }
+    
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 32px;
+        margin-bottom: 32px;
+    }
+    
+    .premium-card {
+        background: linear-gradient(145deg, #ffffff, #f8fafc);
+        border-radius: 20px;
+        padding: 32px;
+        box-shadow: 
+            0 10px 40px rgba(0, 0, 0, 0.1),
+            0 4px 20px rgba(0, 0, 0, 0.05),
+            inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
+    }
+    
+    .premium-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 
+            0 20px 60px rgba(0, 0, 0, 0.15),
+            0 8px 30px rgba(0, 0, 0, 0.1),
+            inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    }
+    
+    .card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 2px solid var(--gray-100);
+    }
+    
+    .card-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--gray-900);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .card-title i {
+        font-size: 1.5rem;
+        color: var(--primary-500);
+    }
+    
+    .activity-item {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px 0;
+        border-bottom: 1px solid var(--gray-100);
+        transition: all 0.2s ease;
+    }
+    
+    .activity-item:hover {
+        background: var(--gray-50);
+        margin: 0 -16px;
+        padding: 16px;
+        border-radius: 12px;
+    }
+    
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+    
+    .activity-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        color: white;
+        background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+        box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+    }
+    
+    .activity-content {
+        flex: 1;
+    }
+    
+    .activity-title {
+        font-weight: 600;
+        color: var(--gray-900);
+        font-size: 14px;
+        margin-bottom: 4px;
+    }
+    
+    .activity-description {
+        color: var(--gray-600);
+        font-size: 13px;
+        margin-bottom: 4px;
+    }
+    
+    .activity-time {
+        color: var(--gray-500);
+        font-size: 12px;
+        font-weight: 500;
+    }
+    
+    @media (max-width: 768px) {
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .dashboard-stats {
+            grid-template-columns: 1fr;
+        }
+        
+        .hero-title {
+            font-size: 2rem;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Executive Dashboard</li>
+{% endblock %}
+
+{% block page_actions %}
+<div class="d-flex gap-2">
+    <button class="btn btn-outline-primary" onclick="refreshDashboard()">
+        <i class="bi bi-arrow-clockwise"></i> Refresh
+    </button>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#quickActionModal">
+        <i class="bi bi-plus-lg"></i> Quick Action
+    </button>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-content" data-user-id="{{ user.id }}">
+    <!-- Hero Section -->
+    <div class="dashboard-hero">
+        <div class="hero-content">
+            <h1 class="hero-title">Welcome back, {{ user.get_full_name|default:user.email }}</h1>
+            <p class="hero-subtitle">Here's what's happening at your hospital today</p>
+            
+            <div class="hero-stats">
+                <div class="hero-stat">
+                    <div class="hero-stat-value">{{ total_patients|default:0 }}</div>
+                    <div class="hero-stat-label">Total Patients</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-value">{{ total_doctors|default:0 }}</div>
+                    <div class="hero-stat-label">Active Doctors</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-value">{{ todays_appointments|default:0 }}</div>
+                    <div class="hero-stat-label">Today's Appointments</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-value">98.5%</div>
+                    <div class="hero-stat-label">System Uptime</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Dashboard Statistics -->
+    <div class="dashboard-stats">
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon patients">
+                    <i class="bi bi-people"></i>
+                </div>
+            </div>
+            <div class="stat-value" data-stat="total_patients">{{ total_patients|default:0 }}</div>
+            <div class="stat-label">Total Patients</div>
+            <div class="stat-change positive">
+                <i class="bi bi-arrow-up"></i>
+                <span>+12% from last month</span>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon doctors">
+                    <i class="bi bi-person-badge"></i>
+                </div>
+            </div>
+            <div class="stat-value" data-stat="total_doctors">{{ total_doctors|default:0 }}</div>
+            <div class="stat-label">Active Doctors</div>
+            <div class="stat-change positive">
+                <i class="bi bi-arrow-up"></i>
+                <span>+3 new this month</span>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon appointments">
+                    <i class="bi bi-calendar-event"></i>
+                </div>
+            </div>
+            <div class="stat-value" data-stat="todays_appointments">{{ todays_appointments|default:0 }}</div>
+            <div class="stat-label">Today's Appointments</div>
+            <div class="stat-change positive">
+                <i class="bi bi-arrow-up"></i>
+                <span>{{ upcoming_appointments|default:0 }} upcoming</span>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon revenue">
+                    <i class="bi bi-currency-dollar"></i>
+                </div>
+            </div>
+            <div class="stat-value" data-stat="monthly_revenue">${{ monthly_revenue|default:0 }}</div>
+            <div class="stat-label">Monthly Revenue</div>
+            <div class="stat-change positive">
+                <i class="bi bi-arrow-up"></i>
+                <span>+8% from last month</span>
+            </div>
+        </div>
+
+        <!-- Medical Records Card -->
+        <div class="premium-stat-card">
+            <div class="stat-header">
+                <div class="stat-icon records">
+                    <i class="bi bi-file-medical"></i>
+                </div>
+            </div>
+            <div class="stat-value" data-stat="total_medical_records">{{ total_medical_records|default:0 }}</div>
+            <div class="stat-label">Medical Records</div>
+            <div class="stat-change positive">
+                <i class="bi bi-arrow-up"></i>
+                <span>+{{ recent_records|length }} this month</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Grid -->
+    <div class="dashboard-grid">
+        <!-- Appointments Chart -->
+        <div class="premium-card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="bi bi-graph-up"></i>
+                    Appointment Trends
+                </h3>
+                <div class="btn-group btn-group-sm" role="group">
+                    <input type="radio" class="btn-check" name="chartPeriod" id="week" checked>
+                    <label class="btn btn-outline-primary" for="week">Week</label>
+                    
+                    <input type="radio" class="btn-check" name="chartPeriod" id="month">
+                    <label class="btn btn-outline-primary" for="month">Month</label>
+                    
+                    <input type="radio" class="btn-check" name="chartPeriod" id="year">
+                    <label class="btn btn-outline-primary" for="year">Year</label>
+                </div>
+            </div>
+            <div class="chart-container" style="height: 300px; padding: 20px;">
+                <canvas id="appointmentsChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Recent Activities -->
+        <div class="premium-card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="bi bi-activity"></i>
+                    Recent Activities
+                </h3>
+                <a href="#" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="activity-list">
+                <div class="activity-item">
+                    <div class="activity-icon">
+                        <i class="bi bi-person-plus"></i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-title">New patient registered</div>
+                        <div class="activity-description">Sarah Johnson added to the system</div>
+                        <div class="activity-time">2 minutes ago</div>
+                    </div>
+                </div>
+                
+                <div class="activity-item">
+                    <div class="activity-icon">
+                        <i class="bi bi-calendar-check"></i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-title">Appointment completed</div>
+                        <div class="activity-description">Dr. Smith completed consultation</div>
+                        <div class="activity-time">15 minutes ago</div>
+                    </div>
+                </div>
+                
+                <div class="activity-item">
+                    <div class="activity-icon">
+                        <i class="bi bi-receipt"></i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-title">Payment received</div>
+                        <div class="activity-description">$450 payment processed</div>
+                        <div class="activity-time">1 hour ago</div>
+                    </div>
+                </div>
+                
+                <div class="activity-item">
+                    <div class="activity-icon">
+                        <i class="bi bi-person-badge"></i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-title">Doctor schedule updated</div>
+                        <div class="activity-description">Dr. Wilson updated availability</div>
+                        <div class="activity-time">2 hours ago</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Medical Records -->
+        <div class="premium-card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="bi bi-file-medical"></i>
+                    Recent Medical Records
+                </h3>
+                <a href="{% url 'records:record_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if recent_records %}
+                    {% for record in recent_records %}
+                    <div class="activity-item">
+                        <div class="activity-icon">
+                            <i class="bi bi-file-medical"></i>
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-title">{{ record.patient.user.get_full_name }}</div>
+                            <div class="activity-description">{{ record.diagnosis|truncatechars:50 }}</div>
+                            <div class="activity-time">{{ record.created_at|timesince }} ago</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-3">
+                        <i class="bi bi-file-medical display-4 text-muted"></i>
+                        <p class="text-muted mt-2">No medical records yet</p>
+                        <a href="{% url 'records:record_create' %}" class="btn btn-primary btn-sm">Create First Record</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="premium-card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="bi bi-lightning"></i>
+                    Quick Actions
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <a href="{% url 'patients:patient_create' %}" class="btn btn-outline-primary w-100">
+                            <i class="bi bi-person-plus me-2"></i>Add Patient
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="{% url 'appointments:appointment_create' %}" class="btn btn-outline-success w-100">
+                            <i class="bi bi-calendar-plus me-2"></i>Schedule Appointment
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="{% url 'records:record_create' %}" class="btn btn-outline-info w-100">
+                            <i class="bi bi-file-medical me-2"></i>New Medical Record
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="{% url 'hospital_analytics:dashboard' %}" class="btn btn-outline-warning w-100">
+                            <i class="bi bi-graph-up me-2"></i>View Analytics
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart Data -->
+<script id="dashboard-chart-data" type="application/json">
+{
+    "appointment_trends": {{ appointment_trends|safe }}
+}
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get chart data
+    const chartData = JSON.parse(document.getElementById('dashboard-chart-data').textContent);
+
+    // Initialize Appointment Trends Chart
+    const ctx = document.getElementById('appointmentsChart');
+    if (ctx) {
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: chartData.appointment_trends.labels,
+                datasets: [{
+                    label: 'Appointments',
+                    data: chartData.appointment_trends.data,
+                    borderColor: '#007bff',
+                    backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#007bff',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: '#ffffff',
+                        bodyColor: '#ffffff',
+                        borderColor: '#007bff',
+                        borderWidth: 1
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#6c757d'
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        },
+                        ticks: {
+                            color: '#6c757d',
+                            stepSize: 1
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                }
+            }
+        });
+    }
+
+    // Chart period toggle functionality
+    const periodButtons = document.querySelectorAll('input[name="chartPeriod"]');
+    periodButtons.forEach(button => {
+        button.addEventListener('change', function() {
+            // Here you could implement AJAX calls to load different period data
+            console.log('Period changed to:', this.id);
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}CSS Test - Premium HMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">🎨 CSS Loading Test</h2>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h4>Testing CSS File Loading</h4>
+                        <p>This page tests if all CSS files are loading correctly.</p>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="test-card premium-card">
+                                <h5>Premium Core CSS</h5>
+                                <p>Testing core styles, colors, and typography.</p>
+                                <button class="btn btn-primary">Primary Button</button>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="test-card premium-card">
+                                <h5>Premium Components</h5>
+                                <p>Testing component styles and layouts.</p>
+                                <button class="btn btn-success">Success Button</button>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="test-card premium-card animate-fade-in">
+                                <h5>Premium Animations</h5>
+                                <p>Testing animations and transitions.</p>
+                                <button class="btn btn-warning">Animated Button</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h5>Static File URLs:</h5>
+                        <ul class="list-group">
+                            <li class="list-group-item">
+                                <strong>Core CSS:</strong> 
+                                <code>{% static 'css/premium-core.css' %}</code>
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Components CSS:</strong> 
+                                <code>{% static 'css/premium-components.css' %}</code>
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Animations CSS:</strong> 
+                                <code>{% static 'css/premium-animations.css' %}</code>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <a href="{% url 'core:test' %}" class="btn btn-secondary">← Back to Test Page</a>
+                        <a href="{% url 'core:dashboard' %}" class="btn btn-primary">Go to Dashboard</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .test-card {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 20px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: transform 0.3s ease;
+    }
+    .test-card:hover {
+        transform: translateY(-5px);
+    }
+    .animate-fade-in {
+        animation: fadeIn 2s ease-in-out;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}

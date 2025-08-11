@@ -1,0 +1,289 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Record Payment - Premium HMS{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'billing:bill_list' %}">Bills</a></li>
+<li class="breadcrumb-item"><a href="{% url 'billing:bill_detail' bill.pk %}">Bill {{ bill.bill_number }}</a></li>
+<li class="breadcrumb-item active">Record Payment</li>
+{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'billing:bill_detail' bill.pk %}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i> Back to Bill
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <!-- Bill Summary Card -->
+        <div class="premium-card mb-4">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h5 class="mb-1">Bill {{ bill.bill_number }}</h5>
+                        <p class="text-muted mb-0">
+                            Patient: {{ bill.patient.full_name }} | 
+                            Due: {{ bill.due_date|date:"M d, Y" }}
+                        </p>
+                    </div>
+                    <div class="text-end">
+                        <div class="h4 mb-0 text-primary">${{ bill.total_amount }}</div>
+                        <small class="text-muted">Total Amount</small>
+                        {% if bill.paid_amount > 0 %}
+                        <div class="mt-1">
+                            <span class="badge bg-success">${{ bill.paid_amount }} Paid</span>
+                            <span class="badge bg-warning">${{ bill.balance_due }} Due</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Form Card -->
+        <div class="premium-card">
+            <div class="card-header">
+                <div class="d-flex align-items-center">
+                    <div class="icon-wrapper me-3">
+                        <i class="bi bi-credit-card text-success"></i>
+                    </div>
+                    <div>
+                        <h4 class="card-title mb-0">Record Payment</h4>
+                        <p class="card-subtitle text-muted mb-0">Add a new payment for this bill</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <form method="post" class="premium-form" id="paymentForm">
+                    {% csrf_token %}
+                    
+                    <div class="form-section">
+                        <h5 class="section-title">
+                            <i class="bi bi-currency-dollar"></i> Payment Details
+                        </h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.amount.id_for_label }}" class="form-label">Payment Amount</label>
+                                    {{ form.amount }}
+                                    {% if form.amount.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.amount.errors.0 }}</div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">
+                                        Outstanding balance: ${{ bill.balance_due }}
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.payment_date.id_for_label }}" class="form-label">Payment Date</label>
+                                    {{ form.payment_date }}
+                                    {% if form.payment_date.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.payment_date.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="{{ form.payment_method.id_for_label }}" class="form-label">Payment Method</label>
+                            {{ form.payment_method }}
+                            {% if form.payment_method.errors %}
+                                <div class="invalid-feedback d-block">{{ form.payment_method.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="{{ form.transaction_id.id_for_label }}" class="form-label">Transaction ID (Optional)</label>
+                            {{ form.transaction_id }}
+                            {% if form.transaction_id.errors %}
+                                <div class="invalid-feedback d-block">{{ form.transaction_id.errors.0 }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                Reference number, check number, or transaction ID
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h5 class="section-title">
+                            <i class="bi bi-journal-text"></i> Additional Information
+                        </h5>
+                        
+                        <div class="form-group">
+                            <label for="{{ form.notes.id_for_label }}" class="form-label">Payment Notes</label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}
+                                <div class="invalid-feedback d-block">{{ form.notes.errors.0 }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                Any additional notes about this payment
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <!-- Payment Summary -->
+                    <div class="payment-summary">
+                        <div class="summary-card">
+                            <h6 class="summary-title">Payment Summary</h6>
+                            <div class="summary-row">
+                                <span>Bill Total:</span>
+                                <span class="fw-bold">${{ bill.total_amount }}</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Previously Paid:</span>
+                                <span class="text-success">${{ bill.paid_amount }}</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Outstanding Balance:</span>
+                                <span class="text-warning">${{ bill.balance_due }}</span>
+                            </div>
+                            <hr>
+                            <div class="summary-row">
+                                <span>This Payment:</span>
+                                <span class="fw-bold text-primary" id="paymentAmount">$0.00</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Remaining Balance:</span>
+                                <span class="fw-bold" id="remainingBalance">${{ bill.balance_due }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle"></i> Record Payment
+                        </button>
+                        <a href="{% url 'billing:bill_detail' bill.pk %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-section {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.form-section:last-of-type {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.section-title {
+    color: #495057;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.section-title i {
+    margin-right: 0.5rem;
+    color: #007bff;
+}
+
+.payment-summary {
+    margin: 2rem 0;
+}
+
+.summary-card {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+}
+
+.summary-title {
+    color: #495057;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+}
+
+.summary-row:last-child {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const amountInput = document.getElementById('{{ form.amount.id_for_label }}');
+    const paymentAmountDisplay = document.getElementById('paymentAmount');
+    const remainingBalanceDisplay = document.getElementById('remainingBalance');
+    const outstandingBalance = {{ bill.balance_due }};
+    
+    // Set default payment date to today
+    const paymentDateInput = document.getElementById('{{ form.payment_date.id_for_label }}');
+    if (!paymentDateInput.value) {
+        const today = new Date().toISOString().split('T')[0];
+        paymentDateInput.value = today;
+    }
+    
+    // Set default amount to outstanding balance
+    if (!amountInput.value) {
+        amountInput.value = outstandingBalance.toFixed(2);
+    }
+    
+    function updatePaymentSummary() {
+        const paymentAmount = parseFloat(amountInput.value) || 0;
+        const remainingBalance = outstandingBalance - paymentAmount;
+        
+        paymentAmountDisplay.textContent = '$' + paymentAmount.toFixed(2);
+        remainingBalanceDisplay.textContent = '$' + Math.max(0, remainingBalance).toFixed(2);
+        
+        // Update color based on remaining balance
+        if (remainingBalance <= 0) {
+            remainingBalanceDisplay.className = 'fw-bold text-success';
+        } else {
+            remainingBalanceDisplay.className = 'fw-bold text-warning';
+        }
+        
+        // Validate payment amount
+        if (paymentAmount > outstandingBalance) {
+            amountInput.setCustomValidity('Payment amount cannot exceed outstanding balance');
+        } else if (paymentAmount <= 0) {
+            amountInput.setCustomValidity('Payment amount must be greater than zero');
+        } else {
+            amountInput.setCustomValidity('');
+        }
+    }
+    
+    // Update summary on amount change
+    amountInput.addEventListener('input', updatePaymentSummary);
+    
+    // Initial update
+    updatePaymentSummary();
+    
+    // Quick amount buttons
+    const quickAmountButtons = document.createElement('div');
+    quickAmountButtons.className = 'mt-2';
+    quickAmountButtons.innerHTML = `
+        <small class="text-muted d-block mb-1">Quick amounts:</small>
+        <button type="button" class="btn btn-sm btn-outline-primary me-1" onclick="setAmount(${outstandingBalance})">Full Amount</button>
+        <button type="button" class="btn btn-sm btn-outline-secondary me-1" onclick="setAmount(${outstandingBalance / 2})">Half Amount</button>
+    `;
+    amountInput.parentNode.appendChild(quickAmountButtons);
+    
+    window.setAmount = function(amount) {
+        amountInput.value = amount.toFixed(2);
+        updatePaymentSummary();
+    };
+});
+</script>
+{% endblock %}

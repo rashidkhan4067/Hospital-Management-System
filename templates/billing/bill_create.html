@@ -1,0 +1,449 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Create Bill - Premium HMS{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'billing:bill_list' %}">Bills</a></li>
+<li class="breadcrumb-item active">Create Bill</li>
+{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'billing:bill_list' %}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i> Back to Bills
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card premium-card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-receipt"></i> Create New Bill
+                    </h5>
+                    <p class="text-muted mb-0">Generate a new bill for patient services</p>
+                </div>
+                <div class="card-body">
+                    <form method="post" class="premium-form" id="billForm">
+                        {% csrf_token %}
+                        
+                        <!-- Patient Information Section -->
+                        <div class="form-section">
+                            <h6 class="section-title">
+                                <i class="bi bi-person"></i> Patient Information
+                            </h6>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="{{ form.patient.id_for_label }}" class="form-label">
+                                            Patient <span class="text-danger">*</span>
+                                        </label>
+                                        {{ form.patient }}
+                                        {% if form.patient.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.patient.errors.0 }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="{{ form.appointment.id_for_label }}" class="form-label">
+                                            Related Appointment
+                                        </label>
+                                        {{ form.appointment }}
+                                        {% if form.appointment.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.appointment.errors.0 }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bill Details Section -->
+                        <div class="form-section">
+                            <h6 class="section-title">
+                                <i class="bi bi-file-text"></i> Bill Details
+                            </h6>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="{{ form.bill_date.id_for_label }}" class="form-label">
+                                            Bill Date <span class="text-danger">*</span>
+                                        </label>
+                                        {{ form.bill_date }}
+                                        {% if form.bill_date.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.bill_date.errors.0 }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="{{ form.due_date.id_for_label }}" class="form-label">
+                                            Due Date <span class="text-danger">*</span>
+                                        </label>
+                                        {{ form.due_date }}
+                                        {% if form.due_date.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.due_date.errors.0 }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label for="{{ form.description.id_for_label }}" class="form-label">
+                                    Description
+                                </label>
+                                {{ form.description }}
+                                {% if form.description.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.description.errors.0 }}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">
+                                    Brief description of services provided
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Services Section -->
+                        <div class="form-section">
+                            <h6 class="section-title">
+                                <i class="bi bi-list-check"></i> Services & Charges
+                            </h6>
+                            
+                            <div class="services-container">
+                                <div class="service-item" id="serviceTemplate" style="display: none;">
+                                    <div class="row align-items-end">
+                                        <div class="col-md-5">
+                                            <label class="form-label">Service</label>
+                                            <input type="text" class="form-control service-name" name="service_name[]" placeholder="Service description">
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label">Quantity</label>
+                                            <input type="number" class="form-control service-quantity" name="service_quantity[]" value="1" min="1">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Unit Price ($)</label>
+                                            <input type="number" class="form-control service-price" name="service_price[]" step="0.01" min="0">
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label">Total</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">$</span>
+                                                <input type="text" class="form-control service-total" readonly>
+                                                <button type="button" class="btn btn-outline-danger remove-service">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="servicesContainer">
+                                    <!-- Services will be added here -->
+                                </div>
+
+                                <button type="button" class="btn btn-outline-primary" id="addService">
+                                    <i class="bi bi-plus-circle"></i> Add Service
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Totals Section -->
+                        <div class="form-section">
+                            <h6 class="section-title">
+                                <i class="bi bi-calculator"></i> Bill Summary
+                            </h6>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="{{ form.subtotal.id_for_label }}" class="form-label">
+                                            Subtotal ($)
+                                        </label>
+                                        {{ form.subtotal }}
+                                        {% if form.subtotal.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.subtotal.errors.0 }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="{{ form.tax_amount.id_for_label }}" class="form-label">
+                                            Tax Amount ($)
+                                        </label>
+                                        {{ form.tax_amount }}
+                                        {% if form.tax_amount.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.tax_amount.errors.0 }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="{{ form.discount_amount.id_for_label }}" class="form-label">
+                                            Discount Amount ($)
+                                        </label>
+                                        {{ form.discount_amount }}
+                                        {% if form.discount_amount.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.discount_amount.errors.0 }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="{{ form.total_amount.id_for_label }}" class="form-label">
+                                            Total Amount ($) <span class="text-danger">*</span>
+                                        </label>
+                                        {{ form.total_amount }}
+                                        {% if form.total_amount.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.total_amount.errors.0 }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Bill Summary Display -->
+                            <div class="bill-summary">
+                                <div class="summary-row">
+                                    <span>Subtotal:</span>
+                                    <span id="displaySubtotal">$0.00</span>
+                                </div>
+                                <div class="summary-row">
+                                    <span>Tax:</span>
+                                    <span id="displayTax">$0.00</span>
+                                </div>
+                                <div class="summary-row">
+                                    <span>Discount:</span>
+                                    <span id="displayDiscount">-$0.00</span>
+                                </div>
+                                <div class="summary-row total-row">
+                                    <span>Total Amount:</span>
+                                    <span id="displayTotal">$0.00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="form-actions">
+                            <div class="d-flex justify-content-between">
+                                <a href="{% url 'billing:bill_list' %}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-x-circle"></i> Cancel
+                                </a>
+                                <div class="d-flex gap-2">
+                                    <button type="submit" name="action" value="save_draft" class="btn btn-outline-primary">
+                                        <i class="bi bi-file-earmark"></i> Save as Draft
+                                    </button>
+                                    <button type="submit" name="action" value="create_bill" class="btn btn-primary">
+                                        <i class="bi bi-check-circle"></i> Create Bill
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-section {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.form-section:last-of-type {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.section-title {
+    color: var(--primary-600);
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.premium-form .form-control,
+.premium-form .form-select {
+    border: 2px solid var(--gray-200);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.premium-form .form-control:focus,
+.premium-form .form-select:focus {
+    border-color: var(--primary-500);
+    box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+}
+
+.form-actions {
+    border-top: 1px solid var(--gray-200);
+    padding-top: 1.5rem;
+    margin-top: 2rem;
+}
+
+.service-item {
+    background: var(--gray-50);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid var(--gray-200);
+}
+
+.services-container {
+    margin-bottom: 1rem;
+}
+
+.bill-summary {
+    background: var(--primary-50);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-top: 1rem;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+}
+
+.total-row {
+    border-top: 2px solid var(--primary-500);
+    padding-top: 0.5rem;
+    margin-top: 0.5rem;
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: var(--primary-700);
+}
+
+.remove-service {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let serviceCount = 0;
+
+    // Add service functionality
+    document.getElementById('addService').addEventListener('click', function() {
+        addService();
+    });
+
+    function addService() {
+        serviceCount++;
+        const template = document.getElementById('serviceTemplate');
+        const clone = template.cloneNode(true);
+        clone.id = 'service_' + serviceCount;
+        clone.style.display = 'block';
+        
+        // Update input names to include index
+        const inputs = clone.querySelectorAll('input');
+        inputs.forEach(input => {
+            if (input.name) {
+                input.name = input.name.replace('[]', '[' + serviceCount + ']');
+            }
+        });
+
+        document.getElementById('servicesContainer').appendChild(clone);
+        
+        // Bind events
+        bindServiceEvents(clone);
+        calculateTotals();
+    }
+
+    function bindServiceEvents(serviceItem) {
+        const quantityInput = serviceItem.querySelector('.service-quantity');
+        const priceInput = serviceItem.querySelector('.service-price');
+        const totalInput = serviceItem.querySelector('.service-total');
+        const removeBtn = serviceItem.querySelector('.remove-service');
+
+        // Calculate service total
+        function calculateServiceTotal() {
+            const quantity = parseFloat(quantityInput.value) || 0;
+            const price = parseFloat(priceInput.value) || 0;
+            const total = quantity * price;
+            totalInput.value = total.toFixed(2);
+            calculateTotals();
+        }
+
+        quantityInput.addEventListener('input', calculateServiceTotal);
+        priceInput.addEventListener('input', calculateServiceTotal);
+
+        // Remove service
+        removeBtn.addEventListener('click', function() {
+            serviceItem.remove();
+            calculateTotals();
+        });
+    }
+
+    function calculateTotals() {
+        let subtotal = 0;
+        
+        document.querySelectorAll('.service-total').forEach(input => {
+            subtotal += parseFloat(input.value) || 0;
+        });
+
+        const taxRate = 0.1; // 10% tax
+        const tax = subtotal * taxRate;
+        const discount = parseFloat(document.querySelector('[name="discount_amount"]').value) || 0;
+        const total = subtotal + tax - discount;
+
+        // Update form fields
+        document.querySelector('[name="subtotal"]').value = subtotal.toFixed(2);
+        document.querySelector('[name="tax_amount"]').value = tax.toFixed(2);
+        document.querySelector('[name="total_amount"]').value = total.toFixed(2);
+
+        // Update display
+        document.getElementById('displaySubtotal').textContent = '$' + subtotal.toFixed(2);
+        document.getElementById('displayTax').textContent = '$' + tax.toFixed(2);
+        document.getElementById('displayDiscount').textContent = '-$' + discount.toFixed(2);
+        document.getElementById('displayTotal').textContent = '$' + total.toFixed(2);
+    }
+
+    // Bind discount input
+    document.querySelector('[name="discount_amount"]').addEventListener('input', calculateTotals);
+
+    // Add initial service
+    addService();
+
+    // Set default dates
+    const today = new Date().toISOString().split('T')[0];
+    const dueDate = new Date();
+    dueDate.setDate(dueDate.getDate() + 30);
+    
+    document.querySelector('[name="bill_date"]').value = today;
+    document.querySelector('[name="due_date"]').value = dueDate.toISOString().split('T')[0];
+});
+</script>
+{% endblock %}
